@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="60%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+    <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="treeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#064E3B"/>
+      <stop offset="100%" stop-color="#022C22"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky & Horizon -->
+  <rect width="320" height="90" fill="url(#skyGrad)"/>
+  
+  <!-- Distant Western Ghats Hills -->
+  <path d="M0,75 Q40,60 90,70 T180,65 T270,72 T320,68 L320,90 L0,90 Z" fill="#1E3A2F" opacity="0.8"/>
+  <path d="M0,80 Q50,70 120,78 T220,74 T320,80 L320,90 L0,90 Z" fill="url(#treeGrad)"/>
+
+  <!-- Highway Roadbed (Perspective) -->
+  <polygon points="120,85 200,85 320,180 0,180" fill="url(#roadGrad)"/>
+
+  <!-- Left Road Shoulder & Greenery -->
+  <polygon points="0,85 120,85 0,180" fill="#065F46" opacity="0.6"/>
+  <!-- Right Road Shoulder & Greenery -->
+  <polygon points="200,85 320,85 320,180" fill="#065F46" opacity="0.6"/>
+
+  <!-- Road Guardrails -->
+  <polygon points="118,85 120,85 6,180 0,180" fill="#94A3B8" opacity="0.4"/>
+  <polygon points="200,85 202,85 320,180 314,180" fill="#94A3B8" opacity="0.4"/>
+
+  <!-- Center Lane Markings (Dashed Perspective) -->
+  <polygon points="159,85 161,85 163,100 157,100" fill="#FACC15"/>
+  <polygon points="158,108 162,108 165,128 155,128" fill="#FACC15"/>
+  <polygon points="156,138 164,138 168,162 152,162" fill="#FACC15"/>
+  <polygon points="154,170 166,170 170,180 150,180" fill="#FACC15"/>
+
+  <!-- Left Lane White Divider -->
+  <polygon points="138,85 139,85 75,180 72,180" fill="#FFFFFF" opacity="0.7"/>
+  <!-- Right Lane White Divider -->
+  <polygon points="181,85 182,85 248,180 245,180" fill="#FFFFFF" opacity="0.7"/>
+
+  <!-- Simulated Vehicle Shadows & Lights -->
+  <!-- Car 1 (Heading Away) -->
+  <rect x="172" y="115" width="16" height="10" rx="3" fill="#3B82F6" opacity="0.85"/>
+  <circle cx="175" cy="125" r="1.5" fill="#EF4444"/>
+  <circle cx="185" cy="125" r="1.5" fill="#EF4444"/>
+
+  <!-- Car 2 (Closer) -->
+  <rect x="90" y="142" width="28" height="16" rx="4" fill="#E2E8F0" opacity="0.9"/>
+  <circle cx="95" cy="158" r="2.5" fill="#EF4444"/>
+  <circle cx="113" cy="158" r="2.5" fill="#EF4444"/>
+
+  <!-- CCTV Scanlines & HUD Overlay -->
+  <line x1="0" y1="20" x2="320" y2="20" stroke="#22D3EE" stroke-width="0.5" opacity="0.2"/>
+  <line x1="0" y1="90" x2="320" y2="90" stroke="#22D3EE" stroke-width="0.5" opacity="0.15"/>
+  <text x="12" y="24" fill="#22D3EE" font-family="monospace" font-size="9" font-weight="700" letter-spacing="0.5">CAM-MH-04 [PUNE-EXP]</text>
+  <text x="240" y="24" fill="#94A3B8" font-family="monospace" font-size="9">30 FPS 1080P</text>
+  
+  <!-- Crosshair in center -->
+  <path d="M150,85 L170,85 M160,75 L160,95" stroke="#22D3EE" stroke-width="0.8" opacity="0.4"/>
+</svg>
+

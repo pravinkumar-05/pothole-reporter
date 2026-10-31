@@ -52,20 +52,44 @@ async function initDb() {
     // Insert demo data if empty
     const count = await db.get('SELECT COUNT(*) as count FROM complaints');
     if (count.count === 0) {
-        console.log('Seeding demo data...');
-        const id1 = 'MH-RD-DEMO01';
-        const id2 = 'MH-RD-DEMO02';
-        
-        await db.run(`INSERT INTO complaints (id, name, phone, email, description, severity, roadType, lat, lng, address, status, submittedAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-            [id1, 'Rajesh Patil', '9876543210', 'rajesh.p@email.com', 'Large pothole on main road near Shivaji Chowk.', 'critical', 'national-highway', 19.0760, 72.8777, 'Shivaji Chowk, Mumbai, Maharashtra', 'in-progress', '2026-03-25 08:30:00', '2026-03-28 14:00:00']);
-        
-        await db.run(`INSERT INTO complaints (id, name, phone, email, description, severity, roadType, lat, lng, address, status, submittedAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-            [id2, 'Priya Sharma', '9123456789', 'priya.s@email.com', 'Multiple potholes from Pune Station to Swargate.', 'high', 'state-highway', 18.5204, 73.8567, 'Pune Station Road, Pune, Maharashtra', 'pending', '2026-03-30 11:45:00', '2026-03-30 11:45:00']);
-
-        await db.run(`INSERT INTO status_history (complaint_id, status, note, date) VALUES (?, ?, ?, ?)`, [id1, 'pending', 'Complaint registered', '2026-03-25 08:30:00']);
-        await db.run(`INSERT INTO status_history (complaint_id, status, note, date) VALUES (?, ?, ?, ?)`, [id1, 'under-review', 'Reviewed by PWD', '2026-03-26 10:15:00']);
-        await db.run(`INSERT INTO status_history (complaint_id, status, note, date) VALUES (?, ?, ?, ?)`, [id1, 'in-progress', 'Repair crew dispatched', '2026-03-28 14:00:00']);
-        await db.run(`INSERT INTO status_history (complaint_id, status, note, date) VALUES (?, ?, ?, ?)`, [id2, 'pending', 'Complaint registered', '2026-03-30 11:45:00']);
+        const demos = [
+            {
+                id: 'MH-2026-7821', name: 'Pravin Kumar', phone: '9820011223', email: 'pravin.pwd@gmail.com',
+                description: 'Large asphalt crater and roadway breakdown near Shivaji Chowk junction causing hazardous traffic swerving.',
+                severity: 'critical', roadType: 'national-highway', lat: 19.0178, lng: 72.8478, address: 'Shivaji Chowk, Dadar, Mumbai, Maharashtra',
+                status: 'in-progress'
+            },
+            {
+                id: 'MH-2026-6542', name: 'Pravin Kumar', phone: '9820011223', email: 'pravin.pwd@gmail.com',
+                description: 'Depression near storm drain grating along Western Express Highway flyover ramp.',
+                severity: 'high', roadType: 'national-highway', lat: 19.0664, lng: 72.8682, address: 'BKC Junction, Western Express Highway, Mumbai, Maharashtra',
+                status: 'under-review'
+            },
+            {
+                id: 'MH-2026-4190', name: 'Pravin Kumar', phone: '9820011223', email: 'pravin.pwd@gmail.com',
+                description: 'Multiple pothole clusters along Andheri-Kurla Road near Chakala Metro pillar 42.',
+                severity: 'medium', roadType: 'municipal-road', lat: 19.1136, lng: 72.8697, address: 'Andheri-Kurla Road, Chakala, Andheri East, Mumbai, Maharashtra',
+                status: 'resolved'
+            },
+            {
+                id: 'MH-2026-3318', name: 'Maharashtra Citizen', phone: '9876543210', email: 'citizen.mh@gmail.com',
+                description: 'Edge raveling and deep rain crater approaching Vashi toll plaza connector.',
+                severity: 'high', roadType: 'state-highway', lat: 19.0771, lng: 72.9986, address: 'Palm Beach Road Connector, Vashi, Navi Mumbai, Maharashtra',
+                status: 'pending'
+            },
+            {
+                id: 'MH-2026-9204', name: 'Pravin Kumar', phone: '9820011223', email: 'pravin.pwd@gmail.com',
+                description: 'Sub-grade breakdown and dangerous pavement depression near Hinjawadi Phase 1 approach.',
+                severity: 'critical', roadType: 'municipal-road', lat: 18.5913, lng: 73.7389, address: 'Hinjawadi IT Park, Pune-Mumbai Corridor, Maharashtra',
+                status: 'in-progress'
+            }
+        ];
+        for (const d of demos) {
+            await db.run('INSERT INTO complaints (id, name, phone, email, description, severity, roadType, lat, lng, address, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [d.id, d.name, d.phone, d.email, d.description, d.severity, d.roadType, d.lat, d.lng, d.address, d.status]);
+            await db.run('INSERT INTO status_history (complaint_id, status, note) VALUES (?, ?, ?)',
+                [d.id, d.status, 'Record active in PWD registry.']);
+        }
     }
 }
 

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RoadGuard Maharashtra</string>
+    <string name="title_activity_main">RoadGuard Maharashtra</string>
+    <string name="package_name">com.roadguard.maharashtra</string>
+    <string name="custom_url_scheme">com.roadguard.maharashtra</string>
+</resources>

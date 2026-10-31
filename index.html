@@ -10,10 +10,22 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="icon" href="data:,">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/icons.js"></script>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <script>
+        (function () {
+            let savedTheme = localStorage.getItem('rg_theme');
+            if (!savedTheme || !['light', 'dark', 'minimalist', 'brutalist'].includes(savedTheme)) {
+                savedTheme = 'light';
+                try { localStorage.setItem('rg_theme', 'light'); } catch (e) {}
+            }
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
 
-<body data-lang="en">
+<body data-lang="en" data-theme="light">
     <div class="bg-pattern"></div>
 
 
@@ -21,49 +33,121 @@
     <nav class="navbar" id="navbar">
         <div class="container">
             <a href="#" class="nav-brand" data-page="home">
-                <img src="assets/logo.png" alt="RoadGuard Logo" class="nav-logo">
+                <img src="assets/logo.png" alt="RoadGuard Maharashtra Logo" class="nav-logo">
                 <div class="nav-brand-text">
-                    <h1 data-i18n="brand_name">RoadGuard Maharashtra</h1>
-                    <span data-i18n="brand_sub">Government of Maharashtra Initiative</span>
+                    <h1 data-i18n="brand_name"><span class="brand-text-road">Road</span><span class="brand-text-guard">Guard</span></h1>
+                    <span data-i18n="brand_sub">Maharashtra</span>
                 </div>
             </a>
             <div class="nav-links" id="navLinks">
                 <a href="#" data-page="home" class="active" data-i18n="nav_home">Home</a>
+                <a href="#" data-page="report" data-i18n="nav_report">Report</a>
                 <a href="#" data-page="track" data-i18n="nav_track">Track</a>
-                <a href="#" data-page="dashboard" data-i18n="nav_dash">Admin</a>
+                <a href="#" data-page="dashboard" data-i18n="nav_dash">Dashboard</a>
                 <a href="#" data-page="about" data-i18n="nav_about">About</a>
 
-                <div class="nav-lang-selector">
+                <!-- Multi-Language Selector (Compact) -->
+                <div class="nav-lang-selector" title="Language">
                     <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
                     <button class="lang-btn" onclick="setLanguage('hi')">HI</button>
                     <button class="lang-btn" onclick="setLanguage('mr')">MR</button>
                 </div>
 
-                <!-- Auth: Login / User Profile -->
-                <div class="nav-auth" id="navAuth">
-                    <a href="#" data-page="login" class="nav-login-btn" id="navLoginBtn">👤 Login</a>
-                </div>
-                <div class="nav-user-profile hidden" id="navUserProfile">
-                    <button class="nav-user-btn" id="navUserBtn">
-                        <div class="nav-avatar" id="navAvatar">U</div>
-                        <span id="navUserName">User</span>
-                        <span class="nav-chevron">▾</span>
+                <!-- Live Theme Switcher Pill -->
+                <div class="theme-segmented-switch" id="themeSegmentedSwitch" title="Theme Toggle (Light / Dark)">
+                    <button class="theme-seg-btn active" id="btnThemeLight" onclick="setAppTheme('light')" title="Light Theme: Clean Modern Civic" aria-label="Light Theme: Clean Modern Civic">
+                        <i data-lucide="sun"></i>
                     </button>
-                    <div class="nav-user-dropdown" id="navUserDropdown">
-                        <div class="dropdown-user-info">
-                            <div class="dropdown-avatar" id="dropdownAvatar">U</div>
+                    <button class="theme-seg-btn" id="btnThemeDark" onclick="setAppTheme('dark')" title="Dark Theme: High-Tech GIS Command Center" aria-label="Dark Theme: High-Tech GIS Command Center">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+
+                <!-- Theme Presets Dropdown -->
+                <div class="theme-preset-dropdown">
+                    <button class="theme-preset-btn" id="themePresetBtn" onclick="toggleThemePresetMenu()" title="Theme Presets" aria-label="Theme Presets">
+                        <i data-lucide="palette"></i>
+                    </button>
+                    <div class="theme-preset-menu" id="themePresetMenu">
+                        <div class="preset-menu-header">Design Presets</div>
+                        <button class="preset-item active" data-preset="light" onclick="setAppTheme('light')">
+                            <span class="preset-dot" style="background:#2563EB;"></span>
                             <div>
-                                <div class="dropdown-name" id="dropdownName">User</div>
-                                <div class="dropdown-email" id="dropdownEmail">user@email.com</div>
+                                <div class="preset-title">Clean Modern Civic</div>
+                                <div class="preset-desc">Light, trustworthy, WCAG AA</div>
                             </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" id="myComplaintsBtn">📋 My Complaints</a>
-                        <a href="#" class="dropdown-item" id="userLogoutBtn">🚪 Logout</a>
+                        </button>
+                        <button class="preset-item" data-preset="dark" onclick="setAppTheme('dark')">
+                            <span class="preset-dot" style="background:#22D3EE;"></span>
+                            <div>
+                                <div class="preset-title">GIS Command Center</div>
+                                <div class="preset-desc">Dark, high-tech telemetry</div>
+                            </div>
+                        </button>
+                        <button class="preset-item" data-preset="minimalist" onclick="setAppTheme('minimalist')">
+                            <span class="preset-dot" style="background:#F97316;"></span>
+                            <div>
+                                <div class="preset-title">Modern Minimalist</div>
+                                <div class="preset-desc">Clean, rounded, mobile-first</div>
+                            </div>
+                        </button>
+                        <button class="preset-item" data-preset="brutalist" onclick="setAppTheme('brutalist')">
+                            <span class="preset-dot" style="background:#FACC15;"></span>
+                            <div>
+                                <div class="preset-title">Neo-Brutalist Civic</div>
+                                <div class="preset-desc">Bold borders, high-contrast</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
 
-                <a href="#" data-page="report" class="btn-report" data-i18n="nav_report">📸 Report Pothole</a>
+                <!-- User Auth: User Login Button (Shown when logged out) -->
+                <button class="nav-login-btn" id="navAuth" onclick="openAuthModal('login')" title="Citizen & Official User Login">
+                    <i data-lucide="log-in"></i>
+                    <span data-i18n="btn_user_login">User Login</span>
+                </button>
+
+                <!-- User Profile Pill & Dropdown (Shown when logged in) -->
+                <div class="nav-user-profile hidden" id="navUserProfile">
+                    <button class="nav-user-btn" id="navUserBtn" title="Account Menu">
+                        <div class="nav-avatar" id="navAvatar">U</div>
+                        <span class="nav-user-name" id="navUserName">User</span>
+                        <i data-lucide="chevron-down" style="width:14px;height:14px;"></i>
+                    </button>
+                    <div class="nav-user-dropdown" id="navUserDropdown">
+                        <div class="dropdown-user-info">
+                            <div class="nav-avatar dropdown-avatar-lg" id="dropdownAvatar">U</div>
+                            <div class="dropdown-user-meta">
+                                <div class="dropdown-name" id="dropdownName">User</div>
+                                <div class="dropdown-email" id="dropdownEmail">user@example.com</div>
+                                <div class="dropdown-badge" id="dropdownBadge">
+                                    <span class="provider-pill google" id="dropdownProviderPill">
+                                        <svg viewBox="0 0 24 24" width="12" height="12"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                        Google Account
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="myComplaintsBtn" data-page="track">
+                            <i data-lucide="clock"></i>
+                            <span data-i18n="my_complaints">My Complaints</span>
+                        </a>
+                        <a href="#" class="dropdown-item" data-page="report">
+                            <i data-lucide="camera"></i>
+                            <span data-i18n="btn_report_main">Report Pothole</span>
+                        </a>
+                        <a href="#" class="dropdown-item" data-page="dashboard">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span data-i18n="gis_admin_dash">GIS Admin Dashboard</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item text-danger" id="userLogoutBtn">
+                            <i data-lucide="log-out"></i>
+                            <span data-i18n="btn_sign_out">Sign Out</span>
+                        </a>
+                    </div>
+                </div>
             </div>
             <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
                 <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
@@ -73,35 +157,73 @@
 
     <!-- ============ HOME PAGE ============ -->
     <div id="page-home" class="page active">
-        <!-- Hero -->
-        <section class="hero">
-            <div class="hero-bg"></div>
-            <div class="container">
-                <div class="hero-content">
-                    <h2 data-i18n="hero_title">Report Road Damage.<br><span class="highlight"
-                            data-i18n="hero_highlight">Get It Fixed.</span></h2>
-                    <p data-i18n="hero_desc">Empowering citizens of Maharashtra to report potholes and road damage
-                        instantly. Upload a photo, pin the location, and track repair progress in real-time.</p>
-                    <div class="hero-actions">
-                        <button class="btn-primary" data-page="report" data-i18n="hero_report">📸 Report a
-                            Pothole</button>
-                        <button class="btn-secondary" data-page="track" data-i18n="hero_track">🔍 Track
-                            Complaint</button>
+        <!-- Hero Section matching Clean Modern Civic / Layout A -->
+        <section class="hero-civic">
+            <div class="container hero-container">
+                <!-- Floating Left Card -->
+                <div class="hero-card-floating">
+                    <h1 class="hero-title" data-i18n="hero_title">
+                        Safer Roads<br><span class="hero-title-accent">Stronger Maharashtra</span>
+                    </h1>
+                    <p class="hero-subtitle" data-i18n="hero_desc">
+                        Report potholes, track progress, and help us build better roads for everyone.
+                    </p>
+                    <div class="hero-actions-group">
+                        <button class="btn-hero-primary" data-page="report">
+                            <span class="btn-hero-cam"><i data-lucide="camera"></i></span>
+                            <div class="btn-hero-copy">
+                                <span class="btn-title-main" data-i18n="btn_report_main">Report Pothole</span>
+                                <span class="btn-sub-note" data-i18n="btn_report_sub">in 60s</span>
+                            </div>
+                        </button>
+                        <button class="btn-hero-secondary" data-page="track">
+                            <span class="btn-search-icon"><i data-lucide="search"></i></span>
+                            <span data-i18n="btn_track_main">Track by Complaint ID</span>
+                            <span class="btn-arrow-icon"><i data-lucide="arrow-right"></i></span>
+                        </button>
+                    </div>
+
+                    <!-- 3 Stats Pillars inside Card (matches mockup exactly) -->
+                    <div class="hero-card-stats">
+                        <div class="hero-stat-item">
+                            <div class="stat-icon-wrap icon-blue"><i data-lucide="clipboard"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-number" id="heroTotal">0</span>
+                                <span class="stat-label" data-i18n="stat_total">Total Complaints</span>
+                            </div>
+                        </div>
+                        <div class="hero-stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <div class="stat-icon-wrap icon-green"><i data-lucide="check-circle"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-number" id="heroResolved">0</span>
+                                <span class="stat-label" data-i18n="stat_resolved">Resolved</span>
+                            </div>
+                        </div>
+                        <div class="hero-stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <div class="stat-icon-wrap icon-orange"><i data-lucide="user"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-number" id="heroProgress">0</span>
+                                <span class="stat-label" data-i18n="stat_progress">In Progress</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="hero-visual">
-                    <div class="hero-map-container glass-card">
-                        <div id="heroMap"></div>
+
+                <!-- Right Side: Interactive Maharashtra Map -->
+                <div class="hero-map-wrapper">
+                    <div class="map-badge-top">
+                        <div class="network-badge-text">
+                            <strong data-i18n="mh_road_net_state">Maharashtra</strong>
+                            <span data-i18n="mh_road_net_sub">Road Network</span>
+                        </div>
                     </div>
-                    <div class="hero-floating-card card-1">
-                        <div class="card-icon">📊</div>
-                        <div class="card-num" id="heroTotal">0</div>
-                        <div class="card-label" data-i18n="card_total">Total Reports</div>
-                    </div>
-                    <div class="hero-floating-card card-2">
-                        <div class="card-icon">✅</div>
-                        <div class="card-num" id="heroResolved">0</div>
-                        <div class="card-label" data-i18n="card_resolved">Resolved</div>
+                    <div id="heroMap" class="hero-map-canvas"></div>
+                    <div class="map-legend-card">
+                        <div class="legend-row"><span class="legend-dot dot-pothole"></span> <span data-i18n="legend_pothole">Pothole</span></div>
+                        <div class="legend-row"><span class="legend-dot dot-repair"></span> <span data-i18n="legend_repair">Under Repair</span></div>
+                        <div class="legend-row"><span class="legend-dot dot-resolved"></span> <span data-i18n="legend_resolved">Resolved</span></div>
                     </div>
                 </div>
             </div>
@@ -112,22 +234,22 @@
             <div class="container">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">📋</div>
+                        <div class="stat-icon icon-blue"><i data-lucide="clipboard"></i></div>
                         <div class="stat-number" id="statTotal">0</div>
                         <div class="stat-label" data-i18n="stat_total">Total Complaints</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">⏳</div>
+                        <div class="stat-icon icon-orange"><i data-lucide="clock"></i></div>
                         <div class="stat-number" id="statPending">0</div>
                         <div class="stat-label" data-i18n="stat_pending">Pending</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">🔧</div>
+                        <div class="stat-icon icon-blue"><i data-lucide="settings"></i></div>
                         <div class="stat-number" id="statProgress">0</div>
                         <div class="stat-label" data-i18n="stat_progress">In Progress</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">✅</div>
+                        <div class="stat-icon icon-green"><i data-lucide="check-circle"></i></div>
                         <div class="stat-number" id="statResolved">0</div>
                         <div class="stat-label" data-i18n="stat_resolved">Resolved</div>
                     </div>
@@ -143,25 +265,25 @@
                 <div class="steps-grid">
                     <div class="step-card">
                         <div class="step-num">1</div>
-                        <div class="step-icon">📸</div>
+                        <div class="step-icon"><i data-lucide="camera"></i></div>
                         <h3 data-i18n="step1_title">Capture Photo</h3>
                         <p data-i18n="step1_desc">Take a photo of the pothole or road damage using your phone camera</p>
                     </div>
                     <div class="step-card">
                         <div class="step-num">2</div>
-                        <div class="step-icon">📍</div>
+                        <div class="step-icon"><i data-lucide="map-pin"></i></div>
                         <h3 data-i18n="step2_title">Pin Location</h3>
                         <p data-i18n="step2_desc">Auto-detect your GPS location or manually pin it on the map</p>
                     </div>
                     <div class="step-card">
                         <div class="step-num">3</div>
-                        <div class="step-icon">📝</div>
+                        <div class="step-icon"><i data-lucide="clipboard"></i></div>
                         <h3 data-i18n="step3_title">Fill Details</h3>
                         <p data-i18n="step3_desc">Describe the damage, select severity level and road type</p>
                     </div>
                     <div class="step-card">
                         <div class="step-num">4</div>
-                        <div class="step-icon">🚀</div>
+                        <div class="step-icon"><i data-lucide="arrow-right"></i></div>
                         <h3 data-i18n="step4_title">Submit & Track</h3>
                         <p data-i18n="step4_desc">Get a unique complaint ID and track repair progress in real-time</p>
                     </div>
@@ -209,30 +331,39 @@
                     <!-- Step 1: Photo -->
                     <div class="step-panel active" id="step1">
                         <div class="upload-zone" id="uploadZone">
-                            <div class="upload-icon">📷</div>
+                            <div class="upload-icon"><i data-lucide="camera"></i></div>
                             <h3 data-i18n="upload_title">Upload or Capture Geotagged Photo</h3>
-                            <p data-i18n="upload_desc">Photo must contain GPS location data (geotag). Take a photo with your camera or upload a geotagged image.</p>
-                            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
-                                <div class="btn-camera" id="btnOpenCamera" data-i18n="btn_cam">📸 Open Camera</div>
-                                <div class="btn-camera" id="btnBrowseFile" style="background:var(--gray-800);color:var(--gray-300);">📁 Browse File</div>
+                            <p data-i18n="upload_desc">Photo must contain GPS location data (geotag). Take a live photo with your device camera or browse a geotagged image.</p>
+                            <div class="upload-actions-bar">
+                                <button type="button" class="btn-camera-trigger" id="btnOpenCamera">
+                                    <i data-lucide="camera"></i>
+                                    <span data-i18n="btn_cam">Open Camera</span>
+                                </button>
+                                <button type="button" class="btn-browse-trigger" id="btnBrowseFile">
+                                    <i data-lucide="file-image"></i>
+                                    <span data-i18n="btn_browse">Browse File</span>
+                                </button>
                             </div>
                             <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
                             <input type="file" id="imageInput" accept="image/*" style="display:none">
                         </div>
                         <div class="image-preview" id="imagePreview">
                             <img id="previewImg" src="" alt="Preview">
-                            <button class="remove-btn" id="removeImage">✕</button>
+                            <button class="remove-btn" id="removeImage" title="Remove image">✕</button>
                         </div>
                         <div id="geotagInfo" style="display:none;margin-top:12px;padding:12px 16px;border-radius:var(--radius-md);background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);">
-                            <p style="color:#10B981;font-size:0.9rem;font-weight:600;margin-bottom:4px;">📍 Geotag Detected</p>
-                            <p id="geotagCoords" style="color:var(--gray-400);font-size:0.85rem;"></p>
+                            <p style="color:#10B981;font-size:0.9rem;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                                <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+                                <span data-i18n="geotag_detected">Geotag Detected</span>
+                            </p>
+                            <p id="geotagCoords" style="color:var(--gray-400);font-size:0.85rem;font-family:monospace;"></p>
                         </div>
                         <p id="step1Error"
-                            style="color:var(--red); font-size:0.9rem; margin-top:12px; display:none; font-weight:600;">
+                            style="color:var(--red); font-size:0.9rem; margin-top:12px; display:none; font-weight:600;" data-i18n="step1_error">
                             Please upload or capture an image of the pothole to proceed.</p>
                         <p id="geotagError"
-                            style="color:var(--red); font-size:0.9rem; margin-top:12px; display:none; font-weight:600;">
-                            ⚠️ This photo has no GPS location data (geotag). Please take a new photo with location services enabled on your camera.</p>
+                            style="color:var(--red); font-size:0.9rem; margin-top:12px; display:none; font-weight:600;" data-i18n="geotag_error">
+                            ⚠️ Unable to find GPS coordinates in this image. Please enable location permissions on your device camera or use "Auto-Detect My Location" in the next step.</p>
                         <div class="wizard-nav">
                             <div></div>
                             <button class="btn-wizard next" id="step1Next" data-i18n="btn_n_loc">Next: Location →</button>
@@ -246,60 +377,79 @@
                             <div id="reportMap"></div>
                         </div>
                         <div class="location-info" id="locationInfo">
-                            <p>📍 <span id="locationAddress">Click on the map or use auto-detect to set location</span>
+                            <p>📍 <span id="locationAddress" data-i18n="click_map_prompt">Click on the map or use auto-detect to set location</span>
                             </p>
                             <p class="coords" id="locationCoords"></p>
                         </div>
                         <div class="wizard-nav">
-                            <button class="btn-wizard prev" id="step2Prev">← Back</button>
+                            <button class="btn-wizard prev" id="step2Prev" data-i18n="btn_back">← Back</button>
                             <button class="btn-wizard next" id="step2Next" data-i18n="btn_n_det">Next: Details →</button>
                         </div>
                     </div>
 
                     <!-- Step 3: Details -->
                     <div class="step-panel" id="step3">
+                        <!-- Quick Google Sign-In Autofill Banner (shown if logged out) -->
+                        <div class="google-autofill-banner" id="googleAutofillBanner">
+                            <div class="autofill-content">
+                                <svg class="google-icon" viewBox="0 0 24 24" width="22" height="22">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                </svg>
+                                <div>
+                                    <strong data-i18n="google_autofill_title">Sign in with Google</strong> <span data-i18n="google_autofill_desc">to auto-fill your citizen contact details and track reports instantly.</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-google-pill" onclick="openGooglePicker()">
+                                <span data-i18n="google_autofill_title">Sign in with Google</span>
+                            </button>
+                        </div>
+
                         <div class="form-grid">
                             <div class="form-group">
                                 <label><span data-i18n="lbl_name">Full Name</span> <span class="required">*</span></label>
-                                <input type="text" id="userName" placeholder="Enter your full name" required>
+                                <input type="text" id="userName" data-i18n-placeholder="ph_name" placeholder="Enter your full name" required>
                             </div>
                             <div class="form-group">
                                 <label><span data-i18n="lbl_phone">Phone Number</span> <span class="required">*</span></label>
-                                <input type="tel" id="userPhone" placeholder="10-digit mobile number" maxlength="10"
+                                <input type="tel" id="userPhone" data-i18n-placeholder="ph_phone" placeholder="10-digit mobile number" maxlength="10"
                                     required>
                             </div>
                             <div class="form-group">
                                 <label data-i18n="lbl_email">Email Address</label>
-                                <input type="email" id="userEmail" placeholder="your@email.com">
+                                <input type="email" id="userEmail" data-i18n-placeholder="ph_email" placeholder="your@email.com">
                             </div>
                             <div class="form-group">
                                 <label><span data-i18n="lbl_sev">Severity</span> <span class="required">*</span></label>
                                 <select id="severity">
-                                    <option value="">Select severity</option>
-                                    <option value="low">🟢 Low — Minor cracks</option>
-                                    <option value="medium">🟡 Medium — Small potholes</option>
-                                    <option value="high">🟠 High — Large potholes</option>
-                                    <option value="critical">🔴 Critical — Road cave-in / Dangerous</option>
+                                    <option value="" data-i18n="opt_select_sev">Select severity</option>
+                                    <option value="low" data-i18n="opt_sev_low">🟢 Low — Minor cracks</option>
+                                    <option value="medium" data-i18n="opt_sev_medium">🟡 Medium — Small potholes</option>
+                                    <option value="high" data-i18n="opt_sev_high">🟠 High — Large potholes</option>
+                                    <option value="critical" data-i18n="opt_sev_critical">🔴 Critical — Road cave-in / Dangerous</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label><span data-i18n="lbl_type">Road Type</span> <span class="required">*</span></label>
                                 <select id="roadType">
-                                    <option value="">Select road type</option>
-                                    <option value="national-highway">National Highway</option>
-                                    <option value="state-highway">State Highway</option>
-                                    <option value="municipal-road">Municipal / City Road</option>
-                                    <option value="village-road">Village / Rural Road</option>
+                                    <option value="" data-i18n="opt_select_type">Select road type</option>
+                                    <option value="national-highway" data-i18n="opt_type_national">National Highway</option>
+                                    <option value="state-highway" data-i18n="opt_type_state">State Highway</option>
+                                    <option value="municipal-road" data-i18n="opt_type_municipal">Municipal / City Road</option>
+                                    <option value="village-road" data-i18n="opt_type_village">Village / Rural Road</option>
                                 </select>
                             </div>
                             <div class="form-group full-width">
                                 <label><span data-i18n="lbl_desc">Description</span> <span class="required">*</span></label>
                                 <textarea id="description"
+                                    data-i18n-placeholder="ph_desc"
                                     placeholder="Describe the road damage in detail..."></textarea>
                             </div>
                         </div>
                         <div class="wizard-nav">
-                            <button class="btn-wizard prev" id="step3Prev">← Back</button>
+                            <button class="btn-wizard prev" id="step3Prev" data-i18n="btn_back">← Back</button>
                             <button class="btn-wizard next" id="step3Next" data-i18n="btn_r_sub">Review & Submit →</button>
                         </div>
                     </div>
@@ -311,7 +461,7 @@
                             <div class="detail-grid" id="reviewGrid"></div>
                         </div>
                         <div class="wizard-nav">
-                            <button class="btn-wizard prev" id="step4Prev">← Edit</button>
+                            <button class="btn-wizard prev" id="step4Prev" data-i18n="btn_edit">← Edit</button>
                             <button class="btn-wizard next" id="submitBtn" data-i18n="btn_submit">🚀 Submit Complaint</button>
                         </div>
                     </div>
@@ -320,14 +470,14 @@
                     <div class="step-panel" id="stepSuccess" style="display:none">
                         <div class="success-panel">
                             <div class="success-icon">🎉</div>
-                            <h2>Complaint Registered!</h2>
-                            <p style="color:var(--gray-400)">Your complaint has been successfully submitted. Save your
+                            <h2 data-i18n="success_title">Complaint Registered!</h2>
+                            <p style="color:var(--gray-400)" data-i18n="success_desc">Your complaint has been successfully submitted. Save your
                                 complaint ID to track progress.</p>
                             <div class="complaint-ref" id="successId"></div>
                             <br><br>
-                            <button class="btn-primary" data-page="track">🔍 Track My Complaint</button>
+                            <button class="btn-primary" data-page="track" data-i18n="btn_track_my">🔍 Track My Complaint</button>
                             <br><br>
-                            <button class="btn-secondary" data-page="home">← Back to Home</button>
+                            <button class="btn-secondary" data-page="home" data-i18n="btn_back_home">← Back to Home</button>
                         </div>
                     </div>
                 </div>
@@ -342,15 +492,16 @@
                 <div class="auth-wrapper">
                     <div class="auth-card">
                         <div class="auth-header">
-                            <div class="auth-logo">🛣️</div>
-                            <h2>Welcome to RoadGuard</h2>
-                            <p>Sign in to report potholes and track your complaints</p>
+                            <div class="auth-logo"><img src="assets/logo.png" alt="RoadGuard Maharashtra Logo" class="auth-brand-logo"></div>
+                            <h2><span data-i18n="auth_welcome">Welcome to</span> <span class="brand-text-road">Road</span><span class="brand-text-guard">Guard</span></h2>
+                            <p data-i18n="auth_sub">Sign in to report potholes and track your complaints</p>
                         </div>
 
                         <!-- Auth Tabs -->
                         <div class="auth-tabs">
-                            <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Login</button>
-                            <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+                            <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')" data-i18n="tab_citizen_login">Citizen Login</button>
+                            <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')" data-i18n="tab_signup_otp">Sign Up (OTP)</button>
+                            <button class="auth-tab" id="tabAdmin" onclick="switchAuthTab('admin')"><i data-lucide="shield-check" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i><span data-i18n="tab_official_admin">Official Admin</span></button>
                         </div>
 
                         <!-- Google Sign In -->
@@ -361,66 +512,66 @@
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
-                            <span>Continue with Google</span>
+                            <span data-i18n="btn_google_continue">Continue with Google</span>
                         </button>
 
                         <div class="auth-divider">
-                            <span>or</span>
+                            <span data-i18n="lbl_or">or</span>
                         </div>
 
                         <!-- Login Form -->
                         <form id="loginForm" class="auth-form">
                             <div class="form-group">
-                                <label>Email Address</label>
-                                <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                                <label data-i18n="lbl_email">Email Address</label>
+                                <input type="email" id="loginEmail" data-i18n-placeholder="ph_email" placeholder="your@email.com" required>
                             </div>
                             <div class="form-group">
-                                <label>Password</label>
+                                <label data-i18n="lbl_password">Password</label>
                                 <div class="password-field">
-                                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                                    <input type="password" id="loginPassword" placeholder="••••••••" required>
                                     <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)">👁️</button>
                                 </div>
                             </div>
                             <div class="auth-options">
                                 <label class="remember-me">
-                                    <input type="checkbox" id="rememberMe"> Remember me
+                                    <input type="checkbox" id="rememberMe"> <span data-i18n="lbl_remember_me">Remember me</span>
                                 </label>
-                                <a href="#" class="forgot-link">Forgot password?</a>
+                                <a href="#" class="forgot-link" data-i18n="link_forgot_pass">Forgot password?</a>
                             </div>
-                            <button type="submit" class="auth-submit-btn">Login</button>
+                            <button type="submit" class="auth-submit-btn" data-i18n="btn_login">Login</button>
                             <p class="auth-error" id="authError"></p>
                         </form>
 
                         <!-- Signup Form -->
                         <form id="signupForm" class="auth-form hidden">
                             <div class="form-group">
-                                <label>Full Name</label>
-                                <input type="text" id="signupName" placeholder="Enter your full name" required>
+                                <label data-i18n="lbl_name">Full Name</label>
+                                <input type="text" id="signupName" data-i18n-placeholder="ph_name" placeholder="Enter your full name" required>
                             </div>
                             <div class="form-group">
-                                <label>Email Address</label>
-                                <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                                <label data-i18n="lbl_email">Email Address</label>
+                                <input type="email" id="signupEmail" data-i18n-placeholder="ph_email" placeholder="your@email.com" required>
                             </div>
                             <div class="form-group">
-                                <label>Phone Number</label>
-                                <input type="tel" id="signupPhone" placeholder="10-digit mobile number" maxlength="10" required>
+                                <label data-i18n="lbl_phone">Phone Number</label>
+                                <input type="tel" id="signupPhone" data-i18n-placeholder="ph_phone" placeholder="10-digit mobile number" maxlength="10" required>
                             </div>
                             <div class="form-group">
-                                <label>Password</label>
+                                <label data-i18n="lbl_password">Password</label>
                                 <div class="password-field">
-                                    <input type="password" id="signupPassword" placeholder="Create a password" required>
+                                    <input type="password" id="signupPassword" placeholder="••••••••" required>
                                     <button type="button" class="toggle-password" onclick="togglePassword('signupPassword', this)">👁️</button>
                                 </div>
                                 <div class="password-strength" id="passwordStrength"></div>
                             </div>
                             <div class="form-group">
-                                <label>Confirm Password</label>
+                                <label data-i18n="lbl_confirm_password">Confirm Password</label>
                                 <div class="password-field">
-                                    <input type="password" id="signupConfirm" placeholder="Confirm your password" required>
+                                    <input type="password" id="signupConfirm" placeholder="••••••••" required>
                                     <button type="button" class="toggle-password" onclick="togglePassword('signupConfirm', this)">👁️</button>
                                 </div>
                             </div>
-                            <button type="submit" class="auth-submit-btn" id="signupSubmitBtn">📱 Send OTP</button>
+                            <button type="submit" class="auth-submit-btn" id="signupSubmitBtn" data-i18n="btn_send_otp">📱 Send OTP</button>
                             <p class="auth-error" id="signupError"></p>
                         </form>
 
@@ -428,9 +579,22 @@
                         <div id="otpPanel" class="auth-form hidden">
                             <div class="otp-header">
                                 <div class="otp-icon">📱</div>
-                                <h3>Verify Your Phone</h3>
-                                <p>We've sent a 6-digit OTP to <strong id="otpPhoneDisplay">+91 ******1234</strong></p>
+                                <h3 data-i18n="otp_verify_title">Verify Your Mobile</h3>
+                                <p><span data-i18n="otp_verify_desc">Enter the 6-digit verification code sent to</span> <strong id="otpPhoneDisplay">+91 ******1234</strong></p>
                             </div>
+
+                            <!-- Live Simulated SMS Notification Banner -->
+                            <div class="otp-sms-banner" id="otpSmsBanner">
+                                <div class="otp-sms-head">
+                                    <span class="sms-badge" data-i18n="otp_simulated">📲 SIMULATED SMS</span>
+                                    <span class="sms-sender">Govt-MH / RoadGuard</span>
+                                </div>
+                                <div class="otp-sms-body">
+                                    <span>Your OTP is <strong id="otpDisplayCode">------</strong></span>
+                                    <button type="button" class="btn-autofill-otp" onclick="autoFillCurrentOTP()" data-i18n="btn_autofill_otp">⚡ Auto-Fill Code</button>
+                                </div>
+                            </div>
+
                             <div class="otp-inputs" id="otpInputs">
                                 <input type="text" maxlength="1" class="otp-digit" data-index="0" inputmode="numeric" autocomplete="one-time-code">
                                 <input type="text" maxlength="1" class="otp-digit" data-index="1" inputmode="numeric">
@@ -441,16 +605,55 @@
                                 <input type="text" maxlength="1" class="otp-digit" data-index="5" inputmode="numeric">
                             </div>
                             <p class="auth-error" id="otpError"></p>
-                            <button class="auth-submit-btn" id="verifyOtpBtn">✅ Verify & Create Account</button>
+                            <button class="auth-submit-btn" id="verifyOtpBtn" data-i18n="btn_verify_signin">✅ Verify & Sign In</button>
                             <div class="otp-resend">
-                                <span id="otpTimer">Resend OTP in <strong id="otpCountdown">30</strong>s</span>
-                                <button id="resendOtpBtn" class="otp-resend-btn hidden" onclick="resendOTP()">🔄 Resend OTP</button>
+                                <span id="otpTimer"><span data-i18n="otp_resend_text">Resend OTP in</span> <strong id="otpCountdown">30</strong>s</span>
+                                <button id="resendOtpBtn" class="otp-resend-btn hidden" onclick="resendOTP()" data-i18n="btn_resend_otp">🔄 Resend OTP</button>
                             </div>
-                            <button class="otp-back-btn" onclick="backToSignup()">← Back to Sign Up</button>
+                            <button class="otp-back-btn" onclick="backToSignup()" data-i18n="btn_back_details">← Back to Details</button>
                         </div>
 
+                        <!-- Official Admin Login Form inside User Login Section -->
+                        <form id="adminPageLoginForm" class="auth-form hidden" onsubmit="handleAdminPageLogin(event)">
+                            <div class="admin-login-banner" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.22);border-radius:var(--radius-md);margin-bottom:18px;">
+                                <i data-lucide="shield-check" style="width:24px;height:24px;color:var(--blue-accent);flex-shrink:0;"></i>
+                                <div>
+                                    <strong style="display:block;font-size:0.86rem;color:var(--text-primary);" data-i18n="admin_portal_title">Government of Maharashtra • PWD Portal</strong>
+                                    <span style="font-size:0.78rem;color:var(--text-muted);" data-i18n="admin_portal_sub">Restricted to verified road engineers, municipal inspectors & GIS operators.</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="lbl_officer_id">Department Officer ID / Username</label>
+                                <input type="text" id="adminPageUser" value="admin" required placeholder="admin">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="lbl_access_password">Access Security Password</label>
+                                <div class="password-field">
+                                    <input type="password" id="adminPagePassword" value="admin123" required placeholder="••••••••">
+                                    <button type="button" class="toggle-password" onclick="togglePassword('adminPagePassword', this)">👁️</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="auth-submit-btn" style="background:var(--navy);box-shadow:0 4px 15px rgba(15,23,42,0.3);margin-top:8px;">
+                                <i data-lucide="shield-check" style="width:16px;height:16px;display:inline-block;vertical-align:-2px;margin-right:6px;"></i>
+                                <span data-i18n="btn_admin_auth">Authenticate & Access GIS Dashboard →</span>
+                            </button>
+                            <div style="margin-top:14px;text-align:center;font-size:0.82rem;color:var(--text-muted);">
+                                <span data-i18n="admin_demo_cred">Demo Officer Credential:</span> <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin</code> / <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin123</code>
+                            </div>
+                            <p class="auth-error" id="adminPageError"></p>
+                        </form>
+
                         <div class="auth-footer">
-                            <p id="authFooterText">Don't have an account? <a href="#" onclick="switchAuthTab('signup'); return false;">Sign up</a></p>
+                            <p id="authFooterText"><span data-i18n="dont_have_account">Don't have an account?</span> <a href="#" onclick="switchAuthTab('signup'); return false;" data-i18n="link_signup">Sign up</a></p>
+                            
+                            <!-- PWD Official / Admin Login Switch in Footer of User Login -->
+                            <div class="auth-admin-switch-row" id="authAdminSwitchRow">
+                                <span id="authAdminSwitchText" data-i18n="admin_switch_text">PWD Officer or Municipal Administrator?</span>
+                                <button type="button" class="btn-admin-switch" id="authAdminSwitchBtn" onclick="switchAuthTab('admin')">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <span data-i18n="btn_admin_switch">Official Admin Login →</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- OTP Toast Notification -->
@@ -502,150 +705,522 @@
                         status</p>
                 </div>
                 <div class="track-search">
-                    <input type="text" id="trackInput" data-i18n="track_placeholder" placeholder="Enter Complaint ID">
+                    <input type="text" id="trackInput" data-i18n="track_placeholder" placeholder="Enter Complaint ID (e.g., MH-2026-1001)">
                     <button id="trackBtn" data-i18n="btn_track">🔍 Track</button>
+                    <button id="trackResetBtn" class="btn-track-reset" onclick="resetComplaintTrack()" title="Reset to enter another complaint ID" data-i18n="btn_reset">🔄 Reset</button>
                 </div>
+                <div class="track-recent-pills" id="trackRecentPills"></div>
                 <div id="trackResult" class="track-result"></div>
             </div>
         </section>
     </div>
 
-    <!-- ============ ADMIN DASHBOARD ============ -->
+    <!-- ============ DASHBOARD PAGE (Direct Citizen & Operations Command Center) ============ -->
     <div id="page-dashboard" class="page hidden">
         <section class="dashboard-page">
             <div class="container">
-                <!-- Login -->
-                <div id="adminLogin">
-                    <div class="login-card">
-                        <div style="font-size:3rem; margin-bottom:16px;">🔐</div>
-                        <h2 data-i18n="login_title">Admin Login</h2>
-                        <p data-i18n="login_sub">Access the complaint management dashboard</p>
-                        <form id="adminLoginForm">
-                            <div class="form-group">
-                                <label data-i18n="lbl_user">Username</label>
-                                <input type="text" id="adminUser" placeholder="Enter username">
-                            </div>
-                            <div class="form-group">
-                                <label data-i18n="lbl_pass">Password</label>
-                                <input type="password" id="adminPass" placeholder="Enter password">
-                            </div>
-                            <button type="submit" class="btn-login" id="loginBtn" data-i18n="btn_login">Login</button>
-                            <p class="login-error" id="loginError">Invalid credentials. Try again.</p>
-                        </form>
-                        <p style="color:var(--gray-600);font-size:0.8rem;margin-top:16px;">(Demo: admin / admin123)</p>
-                    </div>
-                </div>
-                <!-- Dashboard Content -->
-                <div id="adminDashboard" class="hidden">
-                    <div class="admin-header">
-                        <div>
-                            <h2 class="section-title" data-i18n="dash_title">Complaint Dashboard</h2>
-                            <p style="color:var(--gray-400); font-size:0.9rem;" data-i18n="dash_sub">Manage & resolve citizen complaints</p>
+                <!-- ========================================================
+                     1. CITIZEN COMPLAINT STATUS PORTAL
+                     Shown to citizens / non-admins visiting Dashboard
+                     ======================================================== -->
+                <div id="citizenDashboardView" class="citizen-dash-wrapper">
+                    <div class="citizen-dash-header">
+                        <div class="citizen-header-meta">
+                            <span class="portal-badge" style="display:inline-flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;color:var(--saffron);text-transform:uppercase;background:rgba(249,115,22,0.1);padding:4px 12px;border-radius:20px;margin-bottom:8px;">
+                                <i data-lucide="shield-check" style="width:14px;height:14px;"></i>
+                                <span data-i18n="citizen_portal_badge">Government of Maharashtra • Citizen Portal</span>
+                            </span>
+                            <h2 data-i18n="citizen_dash_title">Citizen Complaint Status</h2>
+                            <p id="citizenHeaderSubtitle" data-i18n="citizen_dash_sub">Track real-time inspection, contractor dispatch, and hot-mix asphalt repair progress across Maharashtra road networks.</p>
                         </div>
-                        <button class="btn-secondary" id="logoutBtn" style="padding:10px 20px;" data-i18n="btn_out">🚪 Logout</button>
+                        <div class="citizen-header-actions">
+                            <button type="button" class="btn-citizen-report" onclick="navigateTo('report')">
+                                <i data-lucide="camera"></i>
+                                <span data-i18n="btn_report_pothole">+ Report Pothole</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="admin-stats" id="adminStatsGrid"></div>
-                    <div class="filters-bar">
-                        <select id="filterStatus">
-                            <option value="">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="under-review">Under Review</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="resolved">Resolved</option>
-                        </select>
-                        <select id="filterSeverity">
-                            <option value="">All Severity</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
-                        </select>
-                        <input type="text" id="filterSearch" placeholder="🔍 Search by ID or name...">
+
+                    <!-- Citizen KPI Stats Cards -->
+                    <div class="citizen-kpi-grid">
+                        <div class="citizen-kpi-card total">
+                            <div class="c-kpi-icon"><i data-lucide="clipboard-list"></i></div>
+                            <div class="c-kpi-info">
+                                <span class="c-kpi-num" id="citizenKpiTotal">0</span>
+                                <span class="c-kpi-lbl" data-i18n="kpi_citizen_total">Total Registered Complaints</span>
+                            </div>
+                        </div>
+                        <div class="citizen-kpi-card in-progress">
+                            <div class="c-kpi-icon"><i data-lucide="refresh-cw"></i></div>
+                            <div class="c-kpi-info">
+                                <span class="c-kpi-num" id="citizenKpiProgress">0</span>
+                                <span class="c-kpi-lbl" data-i18n="kpi_citizen_progress">Under Inspection & Repair</span>
+                            </div>
+                        </div>
+                        <div class="citizen-kpi-card resolved">
+                            <div class="c-kpi-icon"><i data-lucide="check-circle-2"></i></div>
+                            <div class="c-kpi-info">
+                                <span class="c-kpi-num" id="citizenKpiResolved">0</span>
+                                <span class="c-kpi-lbl" data-i18n="kpi_citizen_resolved">Successfully Resolved</span>
+                            </div>
+                        </div>
                     </div>
-                    <div style="overflow-x:auto;">
-                        <table class="complaints-table">
-                            <thead>
-                                <tr>
-                                    <th data-i18n="th_id">ID</th>
-                                    <th data-i18n="th_name">Complainant</th>
-                                    <th data-i18n="th_loc">Location</th>
-                                    <th data-i18n="th_sev">Severity</th>
-                                    <th data-i18n="th_status">Status</th>
-                                    <th data-i18n="th_date">Date</th>
-                                    <th data-i18n="th_act">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="complaintsBody"></tbody>
-                        </table>
+
+                    <!-- Citizen Search & Status Filter Bar -->
+                    <div class="citizen-filter-bar">
+                        <div class="citizen-search-box">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="citizenSearchInput" data-i18n-placeholder="ph_citizen_search" placeholder="Search by Complaint ID, road name, or district..." oninput="handleCitizenSearch(this.value)">
+                        </div>
+                        <div class="citizen-status-filter-pills" id="citizenFilterPills">
+                            <button type="button" class="c-pill active" data-status="all" onclick="filterCitizenComplaints('all')" data-i18n="pill_all_status">All Status</button>
+                            <button type="button" class="c-pill" data-status="pending" onclick="filterCitizenComplaints('pending')" data-i18n="pill_pending">Pending</button>
+                            <button type="button" class="c-pill" data-status="under-review" onclick="filterCitizenComplaints('under-review')" data-i18n="pill_under_review">Under Review</button>
+                            <button type="button" class="c-pill" data-status="in-progress" onclick="filterCitizenComplaints('in-progress')" data-i18n="pill_in_repair">In Repair</button>
+                            <button type="button" class="c-pill" data-status="resolved" onclick="filterCitizenComplaints('resolved')" data-i18n="pill_resolved">Resolved</button>
+                        </div>
+                    </div>
+
+                    <!-- Citizen Complaints List Cards -->
+                    <div class="citizen-complaints-cards" id="citizenComplaintsCards">
+                        <!-- Dynamically populated by renderCitizenDashboard() -->
                     </div>
                 </div>
+
+                <!-- ========================================================
+                     2. HIGH-TECH GIS COMMAND CENTER (Admin Dashboard)
+                     Shown ONLY IF admin is logged in (isAdminLoggedIn())
+                     ======================================================== -->
+                <div id="adminDashboardView" class="hidden">
+                    <div id="adminDashboard">
+                        <div class="command-center-layout">
+                            <!-- Left Navigation Sidebar -->
+                            <aside class="dash-sidebar">
+                                <div class="sidebar-brand">
+                                    <img src="assets/logo.png" alt="RoadGuard Maharashtra Logo" class="sidebar-logo">
+                                    <div class="sidebar-brand-text">
+                                        <h3><span class="brand-text-road">Road</span><span class="brand-text-guard">Guard</span></h3>
+                                        <span data-i18n="brand_sub">Maharashtra</span>
+                                    </div>
+                                </div>
+                                <nav class="sidebar-nav">
+                                    <a href="#" class="sidebar-link active" data-tab="dashboard" onclick="scrollToSection('adminDashboard'); return false;">
+                                        <span class="sidebar-icon"><i data-lucide="layout-dashboard"></i></span>
+                                        <span data-i18n="side_overview">Executive Overview</span>
+                                    </a>
+                                    <a href="#" class="sidebar-link" data-tab="users" onclick="scrollToSection('registeredUsersSection'); return false;">
+                                        <span class="sidebar-icon"><i data-lucide="users"></i></span>
+                                        <span data-i18n="side_users">Registered Users</span>
+                                    </a>
+                                    <a href="#" class="sidebar-link" data-tab="complaints" onclick="scrollToSection('complaintsTableSection'); return false;">
+                                        <span class="sidebar-icon"><i data-lucide="clipboard-list"></i></span>
+                                        <span data-i18n="side_complaints">Complaints Registry</span>
+                                    </a>
+                                    <a href="#" class="sidebar-link" data-tab="map" onclick="scrollToSection('dashGisMap'); return false;">
+                                        <span class="sidebar-icon"><i data-lucide="map"></i></span>
+                                        <span data-i18n="side_map">GIS Road Map</span>
+                                    </a>
+                                </nav>
+                                <div class="sidebar-footer">
+                                    <button class="sidebar-logout-btn" id="logoutBtn">
+                                        <span class="sidebar-icon"><i data-lucide="log-out"></i></span>
+                                        <span data-i18n="side_logout">Sign Out (Admin)</span>
+                                    </button>
+                                </div>
+                            </aside>
+
+                            <!-- Main Telemetry Content -->
+                            <main class="dash-main-content">
+                                <!-- Top Command Header -->
+                                <header class="dash-topbar">
+                                    <div class="dash-search-box">
+                                        <span class="search-icon"><i data-lucide="search"></i></span>
+                                        <input type="text" id="dashGlobalSearch" data-i18n-placeholder="ph_admin_search" placeholder="Search complaints, citizen reporters, road names...">
+                                    </div>
+                                    <div class="dash-topbar-actions">
+                                        <button type="button" class="btn-admin-access-pill" onclick="showCitizenDashboard()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(249,115,22,0.12);color:var(--saffron);border:1px solid rgba(249,115,22,0.3);padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                                            <i data-lucide="eye" style="width:14px;height:14px;"></i>
+                                            <span data-i18n="btn_citizen_view">Citizen View</span>
+                                        </button>
+                                        <button class="dash-bell-btn" title="Notifications" aria-label="Notifications">
+                                            <i data-lucide="bell"></i>
+                                            <span class="bell-badge"></span>
+                                        </button>
+                                        <div class="dash-admin-chip" id="dashUserChip">
+                                            <div class="admin-avatar" id="dashUserAvatar"><i data-lucide="shield-check"></i></div>
+                                            <span id="dashUserRole" data-i18n="role_pwd_admin">PWD Administrator (State Command Center)</span>
+                                        </div>
+                                    </div>
+                                </header>
+
+                                <!-- Top KPI Telemetry Bar -->
+                                <div class="dash-kpi-bar" id="adminStatsGrid">
+                                    <!-- 1. Total Received Complaints -->
+                                    <div class="kpi-pill kpi-received">
+                                        <div class="kpi-icon"><i data-lucide="inbox"></i></div>
+                                        <div class="kpi-info">
+                                            <span class="kpi-val" id="dashKpiTotalReceived">0</span>
+                                            <span class="kpi-label" data-i18n="kpi_received_title">Total Received Complaints</span>
+                                            <span class="kpi-subtext" data-i18n="kpi_received_sub">All citizen reports filed</span>
+                                        </div>
+                                    </div>
+                                    <!-- 2. Total Works Done Complaints -->
+                                    <div class="kpi-pill kpi-resolved">
+                                        <div class="kpi-icon"><i data-lucide="check-circle-2"></i></div>
+                                        <div class="kpi-info">
+                                            <span class="kpi-val" id="dashKpiWorksDone">0</span>
+                                            <span class="kpi-label" data-i18n="kpi_works_title">Total Works Done</span>
+                                            <span class="kpi-subtext" data-i18n="kpi_works_sub">Repairs completed & verified</span>
+                                        </div>
+                                    </div>
+                                    <!-- 3. Work In Progress Complaints -->
+                                    <div class="kpi-pill kpi-progress">
+                                        <div class="kpi-icon"><i data-lucide="hammer"></i></div>
+                                        <div class="kpi-info">
+                                            <span class="kpi-val" id="dashKpiInProgress">0</span>
+                                            <span class="kpi-label" data-i18n="kpi_progress_title">Work In Progress</span>
+                                            <span class="kpi-subtext" data-i18n="kpi_progress_sub">Crews active on-site</span>
+                                        </div>
+                                    </div>
+                                    <!-- 4. Resolution Rate / Completion Rate -->
+                                    <div class="kpi-pill kpi-rate">
+                                        <div class="kpi-icon"><i data-lucide="trending-up"></i></div>
+                                        <div class="kpi-info">
+                                            <span class="kpi-val" id="dashKpiResolutionRate">0%</span>
+                                            <span class="kpi-label" data-i18n="kpi_rate_title">Completion Rate</span>
+                                            <span class="kpi-subtext" data-i18n="kpi_rate_sub">Statewide repair efficiency</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Telemetry Center Grid (Graphs, GIS Map & Recent Complaints) -->
+                                <div class="dash-telemetry-grid">
+                                    <!-- Left: Live Road Condition & Telemetry Cards -->
+                                    <div class="telemetry-left-col">
+                                        <div class="telemetry-card live-map-card">
+                                            <div class="card-head">
+                                                <div style="display:flex;align-items:center;gap:10px;">
+                                                    <h4 data-i18n="card_live_road">Live Maharashtra Road Condition</h4>
+                                                    <span class="live-pill"><span class="pulse-red"></span> <span data-i18n="badge_live_gis">LIVE GIS</span></span>
+                                                </div>
+                                                <small style="color:var(--text-muted);font-size:0.78rem;" data-i18n="card_live_road_sub">Interactive District Telemetry</small>
+                                            </div>
+                                            <div class="gis-map-container">
+                                                <div id="dashGisMap"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Bottom Row of 3 Telemetry Cards (Graph of Resolution Rate) -->
+                                        <div class="telemetry-widgets-row">
+                                            <!-- Complaints Trend Graph -->
+                                            <div class="telemetry-mini-card trend-card">
+                                                <div class="card-head-sm">
+                                                    <h5 data-i18n="chart_trend_title">Complaints vs Works Done</h5>
+                                                    <div class="trend-tabs">
+                                                        <button class="trend-tab active" onclick="setTrendRange(this, '7d')">7D</button>
+                                                        <button class="trend-tab" onclick="setTrendRange(this, '30d')">30D</button>
+                                                        <button class="trend-tab" onclick="setTrendRange(this, '90d')">90D</button>
+                                                    </div>
+                                                </div>
+                                                <div class="trend-chart-svg">
+                                                    <svg viewBox="0 0 200 60" class="sparkline-svg" preserveAspectRatio="none">
+                                                        <defs>
+                                                            <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stop-color="#2563EB" stop-opacity="0.45"/>
+                                                                <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0"/>
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <path id="trendAreaPath" d="M 0,45 Q 30,12 60,35 T 120,20 T 170,38 T 200,15 L 200,60 L 0,60 Z" fill="url(#trendGrad)"/>
+                                                        <path id="trendLinePath" d="M 0,45 Q 30,12 60,35 T 120,20 T 170,38 T 200,15" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+                                                        <circle cx="200" cy="15" r="3.5" fill="#2563EB"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+
+                                            <!-- Graph of Resolution Rate (Circular Gauge) -->
+                                            <div class="telemetry-mini-card gauge-card">
+                                                <div class="gauge-wrap">
+                                                    <svg viewBox="0 0 100 100" class="gauge-svg">
+                                                        <circle cx="50" cy="50" r="38" class="gauge-bg-circle"/>
+                                                        <circle cx="50" cy="50" r="38" class="gauge-progress-circle" id="dashGaugeCircle" stroke-dasharray="238.7" stroke-dashoffset="238.7"/>
+                                                    </svg>
+                                                    <div class="gauge-inner">
+                                                        <span class="gauge-pct" id="dashGaugePct">0%</span>
+                                                        <span class="gauge-sublabel" data-i18n="chart_rate_title">Resolution Rate</span>
+                                                        <small class="gauge-note" data-i18n="chart_rate_sub">Works Done Pulse</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right: Recent Complaints Activity Feed -->
+                                    <div class="telemetry-right-col">
+                                        <div class="telemetry-card recent-feed-card" style="height:100%;display:flex;flex-direction:column;">
+                                            <div class="card-head">
+                                                <div style="display:flex;align-items:center;gap:8px;">
+                                                    <h4 data-i18n="feed_title">Recent Complaints</h4>
+                                                    <span class="live-pill" style="font-size:0.65rem;padding:2px 8px;"><span data-i18n="badge_live_feed">LIVE FEED</span></span>
+                                                </div>
+                                                <a href="#complaintsTableSection" class="view-all-link" data-i18n="link_view_all">View All →</a>
+                                            </div>
+                                            <div class="recent-feed-list" id="dashRecentFeed" style="flex:1;overflow-y:auto;max-height:450px;">
+                                                <!-- Dynamically populated by renderDashboardFeed() with clickable inspect triggers -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Registered Users Directory Section -->
+                                <div class="dash-users-section" id="registeredUsersSection">
+                                    <div class="table-section-head">
+                                        <div class="users-section-title">
+                                            <div class="title-with-badge" style="display:flex;align-items:center;gap:10px;">
+                                                <h4 data-i18n="users_title">Registered Users Directory</h4>
+                                                <span class="users-count-badge" id="registeredUsersCountBadge">Loading users...</span>
+                                            </div>
+                                            <p class="section-subtext" data-i18n="users_sub">Citizens registered on the RoadGuard portal with their complaint history and contact details.</p>
+                                        </div>
+                                        <div class="users-search-box">
+                                            <input type="text" id="filterUsersSearch" data-i18n-placeholder="ph_users_search" placeholder="🔍 Search citizens by name, email, phone..." oninput="filterRegisteredUsersTable(this.value)">
+                                        </div>
+                                    </div>
+                                    <div class="dash-table-wrap">
+                                        <table class="complaints-table users-directory-table">
+                                            <thead>
+                                                <tr>
+                                                    <th data-i18n="th_reg_citizen">Registered Citizen</th>
+                                                    <th data-i18n="th_contact">Contact Information</th>
+                                                    <th data-i18n="th_role">Role</th>
+                                                    <th data-i18n="th_joined">Joined Date</th>
+                                                    <th data-i18n="th_reports">Complaints Filed</th>
+                                                    <th data-i18n="th_acct_status">Account Status</th>
+                                                    <th data-i18n="th_action">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="registeredUsersTableBody">
+                                                <!-- Dynamically populated by renderRegisteredUsers() -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Complaints Filed by Users (All Complaints Table - Clickable & Inspectable) -->
+                                <div class="dash-table-section" id="complaintsTableSection">
+                                    <div class="table-section-head">
+                                        <div>
+                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                <h4 data-i18n="registry_title">Complaints Registry & Inspection Table</h4>
+                                            </div>
+                                            <p class="section-subtext" data-i18n="registry_sub">Inspect photographic proof, severity, and update repair lifecycle status in real time.</p>
+                                        </div>
+                                        <div class="filters-bar">
+                                            <select id="filterStatus">
+                                                <option value="" data-i18n="pill_all_status">All Statuses</option>
+                                                <option value="pending" data-i18n="status_pending">Pending</option>
+                                                <option value="under-review" data-i18n="status_under_review">Under Review</option>
+                                                <option value="in-progress" data-i18n="status_in_progress">Work In Progress</option>
+                                                <option value="resolved" data-i18n="status_resolved">Works Done (Resolved)</option>
+                                            </select>
+                                            <select id="filterSeverity">
+                                                <option value="" data-i18n="lbl_sev">All Severity</option>
+                                                <option value="critical" data-i18n="sev_critical">Critical</option>
+                                                <option value="high" data-i18n="sev_high">High</option>
+                                                <option value="medium" data-i18n="sev_medium">Medium</option>
+                                                <option value="low" data-i18n="sev_low">Low</option>
+                                            </select>
+                                            <input type="text" id="filterSearch" data-i18n-placeholder="ph_citizen_search" placeholder="🔍 Search by ID, citizen, or road...">
+                                            <button type="button" class="btn-clear-filter hidden" id="btnClearComplaintsFilter" onclick="clearComplaintsFilter()" data-i18n="btn_clear_filter">Clear Filter</button>
+                                        </div>
+                                    </div>
+                                    <div class="dash-table-wrap">
+                                        <table class="complaints-table">
+                                            <thead>
+                                                <tr>
+                                                    <th data-i18n="th_comp_id">Complaint ID</th>
+                                                    <th data-i18n="th_citizen">Citizen Reporter</th>
+                                                    <th data-i18n="th_pothole_loc">Location / Road</th>
+                                                    <th data-i18n="th_severity">Severity</th>
+                                                    <th data-i18n="th_status">Status</th>
+                                                    <th data-i18n="th_submitted">Date Filed</th>
+                                                    <th data-i18n="th_action">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="complaintsBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </main>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
             </div>
         </section>
     </div>
 
     <!-- ============ ABOUT PAGE ============ -->
     <div id="page-about" class="page hidden">
-        <section class="about-page page-section">
+        <section class="about-page">
             <div class="container">
-                <div class="about-grid">
-                    <div class="about-content">
-                        <h2 data-i18n="about_t">About <span style="color:var(--saffron)">RoadGuard Maharashtra</span></h2>
-                        <p data-i18n="about_p1">RoadGuard Maharashtra is a citizen-driven initiative by the Government of Maharashtra under
-                            the Smart India Hackathon (SIH) program. Our mission is to create safer roads by empowering
-                            citizens to report road damage quickly and efficiently.</p>
-                        <p data-i18n="about_p2">Every complaint is reviewed by the Public Works Department (PWD) and routed to the
-                            appropriate municipal authority for timely repair. Citizens can track the progress of their
-                            complaint in real-time.</p>
-                        <div class="about-features">
-                            <div class="about-feature">
-                                <div class="feat-icon">📸</div>
-                                <h4 data-i18n="f1_t">Photo Evidence</h4>
-                                <p data-i18n="f1_d">Upload images for faster verification</p>
-                            </div>
-                            <div class="about-feature">
-                                <div class="feat-icon">📍</div>
-                                <h4 data-i18n="f2_t">GPS Location</h4>
-                                <p data-i18n="f2_d">Accurate pinpointing via maps</p>
-                            </div>
-                            <div class="about-feature">
-                                <div class="feat-icon">🔔</div>
-                                <h4 data-i18n="f3_t">Real-time Tracking</h4>
-                                <p data-i18n="f3_d">Track complaint status live</p>
-                            </div>
-                            <div class="about-feature">
-                                <div class="feat-icon">🏛️</div>
-                                <h4 data-i18n="f4_t">Govt. Backed</h4>
-                                <p data-i18n="f4_d">Official Maharashtra initiative</p>
-                            </div>
+                <!-- About Hero Header -->
+                <div class="about-hero-card">
+                    <div class="about-hero-badge">
+                        <img src="assets/logo.png" alt="RoadGuard Maharashtra" class="about-hero-logo">
+                        <span data-i18n="about_hero_badge">Government of Maharashtra • Public Works Department (PWD)</span>
+                    </div>
+                    <h2 class="about-hero-title" data-i18n="about_hero_title">Institutional Road Safety & Citizen Infrastructure Network</h2>
+                    <p class="about-hero-desc" data-i18n="about_hero_desc">
+                        RoadGuard Maharashtra is an enterprise civic infrastructure reporting platform built to empower citizens, municipal corporations, and the Maharashtra Public Works Department. By bridging high-precision GIS telemetry, real-time photographic evidence verification, and automated municipal routing, RoadGuard accelerates asphalt repair across all 36 districts of Maharashtra.
+                    </p>
+
+                    <!-- Key Impact Metrics Strip -->
+                    <div class="about-metrics-strip">
+                        <div class="about-metric-item">
+                            <span class="about-metric-num">36</span>
+                            <span class="about-metric-label" data-i18n="about_metric_districts">Districts Covered</span>
+                        </div>
+                        <div class="about-metric-divider"></div>
+                        <div class="about-metric-item">
+                            <span class="about-metric-num">350+</span>
+                            <span class="about-metric-label" data-i18n="about_metric_wards">PWD Wards Integrated</span>
+                        </div>
+                        <div class="about-metric-divider"></div>
+                        <div class="about-metric-item">
+                            <span class="about-metric-num">72h</span>
+                            <span class="about-metric-label" data-i18n="about_metric_sla">Field Response SLA</span>
+                        </div>
+                        <div class="about-metric-divider"></div>
+                        <div class="about-metric-item">
+                            <span class="about-metric-num">100%</span>
+                            <span class="about-metric-label" data-i18n="about_metric_proof">Geotagged Proof</span>
                         </div>
                     </div>
-                    <div class="contact-cards">
-                        <div class="contact-card">
-                            <div class="contact-icon">📞</div>
-                            <div>
-                                <h4>Helpline</h4>
-                                <p>1800-120-8040 (Toll Free)</p>
+                </div>
+
+                <!-- 4 Core Pillars -->
+                <div class="about-pillars-section">
+                    <h3 class="about-subheading" data-i18n="about_pillars_title">Core Operational Pillars</h3>
+                    <div class="about-pillars-grid">
+                        <div class="pillar-card">
+                            <div class="pillar-icon-box icon-orange">
+                                <i data-lucide="camera"></i>
+                            </div>
+                            <h4 data-i18n="pillar_1_title">AI & Photo Verification</h4>
+                            <p data-i18n="pillar_1_desc">Every report requires live photographic evidence with high-precision timestamping and road surface distress validation to eliminate false complaints.</p>
+                        </div>
+                        <div class="pillar-card">
+                            <div class="pillar-icon-box icon-blue">
+                                <i data-lucide="map-pin"></i>
+                            </div>
+                            <h4 data-i18n="pillar_2_title">Sub-Meter GIS Telemetry</h4>
+                            <p data-i18n="pillar_2_desc">Automated spatial coordinates pinpoint exact potholes on Maharashtra's arterial highways and city roads, routing tickets directly to the responsible division.</p>
+                        </div>
+                        <div class="pillar-card">
+                            <div class="pillar-icon-box icon-green">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <h4 data-i18n="pillar_3_title">Real-Time Citizen Tracking</h4>
+                            <p data-i18n="pillar_3_desc">Citizens receive transparent tracking from the moment a pothole is pinned through PWD inspection, asphalt patch repair, and resolution verification.</p>
+                        </div>
+                        <div class="pillar-card">
+                            <div class="pillar-icon-box icon-blue">
+                                <i data-lucide="shield-check"></i>
+                            </div>
+                            <h4 data-i18n="pillar_4_title">Institutional Accountability</h4>
+                            <p data-i18n="pillar_4_desc">Built under the Smart India Hackathon initiative in direct alignment with Maharashtra PWD standards, urban governance, and RTI transparency protocols.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PWD Resolution Workflow Pipeline -->
+                <div class="about-workflow-section">
+                    <h3 class="about-subheading" data-i18n="about_wf_title">How Road Damage Gets Resolved</h3>
+                    <div class="workflow-steps-track">
+                        <div class="workflow-step-node">
+                            <div class="step-badge-num">01</div>
+                            <div class="step-node-icon"><i data-lucide="camera"></i></div>
+                            <h5 data-i18n="about_wf_s1_t">Citizen Report</h5>
+                            <p data-i18n="about_wf_s1_d">Photo snapped with GPS coords</p>
+                        </div>
+                        <div class="workflow-step-connector"></div>
+                        <div class="workflow-step-node">
+                            <div class="step-badge-num">02</div>
+                            <div class="step-node-icon"><i data-lucide="cpu"></i></div>
+                            <h5 data-i18n="about_wf_s2_t">AI Validation</h5>
+                            <p data-i18n="about_wf_s2_d">Distress verified & deduplicated</p>
+                        </div>
+                        <div class="workflow-step-connector"></div>
+                        <div class="workflow-step-node">
+                            <div class="step-badge-num">03</div>
+                            <div class="step-node-icon"><i data-lucide="map"></i></div>
+                            <h5 data-i18n="about_wf_s3_t">Ward Dispatch</h5>
+                            <p data-i18n="about_wf_s3_d">Routed to local PWD engineer</p>
+                        </div>
+                        <div class="workflow-step-connector"></div>
+                        <div class="workflow-step-node">
+                            <div class="step-badge-num">04</div>
+                            <div class="step-node-icon"><i data-lucide="activity"></i></div>
+                            <h5 data-i18n="about_wf_s4_t">Asphalt Repair</h5>
+                            <p data-i18n="about_wf_s4_d">Field road maintenance crew</p>
+                        </div>
+                        <div class="workflow-step-connector"></div>
+                        <div class="workflow-step-node">
+                            <div class="step-badge-num">05</div>
+                            <div class="step-node-icon"><i data-lucide="check-circle"></i></div>
+                            <h5 data-i18n="about_wf_s5_t">Verified Proof</h5>
+                            <p data-i18n="about_wf_s5_d">Resolution logged & closed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Official Directory & Grievance Contacts -->
+                <div class="about-contacts-section">
+                    <h3 class="about-subheading" data-i18n="about_dir_title">Public Works & Grievance Directory</h3>
+                    <div class="about-directory-grid">
+                        <div class="directory-card">
+                            <div class="dir-icon-wrap icon-blue">
+                                <i data-lucide="phone"></i>
+                            </div>
+                            <div class="dir-details">
+                                <span class="dir-type" data-i18n="about_dir_toll_t">Toll-Free Helpline (24x7)</span>
+                                <h4 class="dir-value">1800-120-8040</h4>
+                                <p class="dir-note" data-i18n="about_dir_toll_d">Statewide Road Emergency & Assistance</p>
                             </div>
                         </div>
-                        <div class="contact-card">
-                            <div class="contact-icon">📧</div>
-                            <div>
-                                <h4>Email</h4>
-                                <p>roadguard@maharashtra.gov.in</p>
+
+                        <div class="directory-card">
+                            <div class="dir-icon-wrap icon-green">
+                                <i data-lucide="mail"></i>
+                            </div>
+                            <div class="dir-details">
+                                <span class="dir-type" data-i18n="about_dir_desk_t">Official Support Desk</span>
+                                <h4 class="dir-value">roadguard@maharashtra.gov.in</h4>
+                                <p class="dir-note" data-i18n="about_dir_desk_d">Public Grievances & Municipal Inquiries</p>
                             </div>
                         </div>
-                        <div class="contact-card">
-                            <div class="contact-icon">🏢</div>
-                            <div>
-                                <h4>Address</h4>
-                                <p>Mantralaya, Madam Cama Road,<br>Mumbai, Maharashtra - 400032</p>
+
+                        <div class="directory-card">
+                            <div class="dir-icon-wrap icon-orange">
+                                <i data-lucide="building"></i>
+                            </div>
+                            <div class="dir-details">
+                                <span class="dir-type" data-i18n="about_dir_hq_t">Mantralaya Headquarters</span>
+                                <h4 class="dir-value" data-i18n="about_dir_hq_dept">Public Works Department</h4>
+                                <p class="dir-note" data-i18n="about_dir_hq_d">Madam Cama Road, Nariman Point, Mumbai 400032</p>
                             </div>
                         </div>
-                        <div class="contact-card">
-                            <div class="contact-icon">🌐</div>
-                            <div>
-                                <h4>Website</h4>
-                                <p>www.maharashtra.gov.in</p>
+
+                        <div class="directory-card">
+                            <div class="dir-icon-wrap icon-blue">
+                                <i data-lucide="globe"></i>
+                            </div>
+                            <div class="dir-details">
+                                <span class="dir-type" data-i18n="about_dir_gov_t">Government Portal</span>
+                                <h4 class="dir-value">www.maharashtra.gov.in</h4>
+                                <p class="dir-note" data-i18n="about_dir_gov_d">Official Government of Maharashtra Website</p>
                             </div>
                         </div>
                     </div>
@@ -654,15 +1229,385 @@
         </section>
     </div>
 
+    <!-- ============ LIVE CAMERA VIEWFINDER MODAL ============ -->
+    <div class="camera-modal-overlay" id="cameraModal" style="display:none;">
+        <div class="camera-modal-backdrop" onclick="closeLiveCamera()"></div>
+        <div class="camera-modal-box">
+            <div class="camera-modal-header">
+                <div class="camera-live-indicator">
+                    <span class="live-rec-dot"></span>
+                    <span data-i18n="cam_live_stream">Live Device Camera</span>
+                </div>
+                <button type="button" class="camera-modal-close" onclick="closeLiveCamera()" title="Close Camera" aria-label="Close Camera">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="camera-stream-wrapper">
+                <video id="cameraVideo" autoplay playsinline muted></video>
+                <div class="camera-viewfinder-overlay">
+                    <div class="camera-corner c-top-left"></div>
+                    <div class="camera-corner c-top-right"></div>
+                    <div class="camera-corner c-bottom-left"></div>
+                    <div class="camera-corner c-bottom-right"></div>
+                    <div class="camera-crosshair"></div>
+                    <div class="camera-hud-badge" id="cameraGpsStatus">
+                        <i data-lucide="map-pin"></i>
+                        <span id="cameraGpsText" data-i18n="cam_gps_detecting">Detecting GPS location...</span>
+                    </div>
+                </div>
+                <div class="camera-shutter-flash" id="cameraFlash"></div>
+                <canvas id="cameraCanvas" style="display:none;"></canvas>
+            </div>
+
+            <div class="camera-modal-footer">
+                <button type="button" class="cam-action-btn" id="btnFlipCamera" onclick="flipCamera()" title="Switch Camera" aria-label="Switch Camera">
+                    <i data-lucide="refresh-cw"></i>
+                    <span data-i18n="cam_flip">Flip</span>
+                </button>
+                <button type="button" class="cam-snap-btn" id="btnTakeSnap" onclick="takeLiveSnapshot()" title="Click Photo" aria-label="Click Photo">
+                    <div class="snap-inner-circle">
+                        <i data-lucide="camera"></i>
+                    </div>
+                </button>
+                <button type="button" class="cam-action-btn" onclick="closeLiveCamera()" title="Cancel" aria-label="Cancel">
+                    <i data-lucide="x"></i>
+                    <span data-i18n="cam_cancel">Cancel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ============ COMPLAINT DETAIL MODAL ============ -->
     <div class="modal-overlay" id="complaintModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Complaint Details</h2>
+                <h2 id="modalTitle" data-i18n="modal_comp_details">Complaint Details</h2>
                 <button class="modal-close" id="modalClose">✕</button>
             </div>
             <div id="modalBody"></div>
         </div>
+    </div>
+
+    <!-- ============ ADMIN OFFICIAL LOGIN MODAL ============ -->
+    <div class="modal-overlay" id="adminLoginModal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeAdminLoginModal()"></div>
+        <div class="auth-modal-dialog">
+            <div class="auth-modal-header">
+                <div class="auth-modal-brand">
+                    <img src="assets/logo.png" alt="RoadGuard Maharashtra Logo" class="auth-modal-logo">
+                    <div>
+                        <h3 data-i18n="pwd_officer_login_title">PWD Official Login</h3>
+                        <p data-i18n="pwd_cmd_center_sub">Government of Maharashtra • Command Center</p>
+                    </div>
+                </div>
+                <button type="button" class="auth-modal-close" onclick="closeAdminLoginModal()" title="Close" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="auth-modal-body">
+                <div class="auth-info-banner" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-md);background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);margin-bottom:18px;font-size:0.83rem;color:var(--text-secondary);">
+                    <i data-lucide="shield-alert" style="width:18px;height:18px;color:var(--blue-accent);flex-shrink:0;"></i>
+                    <span data-i18n="pwd_restricted_banner">Authorized PWD road engineers & municipal officers only.</span>
+                </div>
+
+                <form id="adminModalLoginForm" onsubmit="handleAdminModalLogin(event)">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label for="adminModalUser" style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:var(--text-secondary);" data-i18n="lbl_dept_officer_id">Department Officer ID / Username</label>
+                        <div class="input-with-icon">
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" id="adminModalUser" class="auth-input" value="admin" required placeholder="admin">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label for="adminModalPass" style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:var(--text-secondary);" data-i18n="lbl_access_sec_password">Access Security Password</label>
+                        <div class="input-with-icon">
+                            <i data-lucide="lock" class="input-icon"></i>
+                            <input type="password" id="adminModalPass" class="auth-input" value="admin123" required placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit-btn" style="width:100%;padding:12px;background:var(--navy);color:#FFFFFF;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(15,23,42,0.25);">
+                        <i data-lucide="shield-check"></i>
+                        <span data-i18n="btn_auth_dash_arrow">Authenticate & Access Dashboard →</span>
+                    </button>
+                    <div style="margin-top:14px; text-align:center; font-size:0.8rem; color:var(--text-muted);">
+                        <span data-i18n="demo_officer_cred">Demo Officer Credential:</span> <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin</code> / <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin123</code>
+                    </div>
+                </form>
+            </div>
+            <div class="auth-modal-footer" style="padding-top:14px;border-top:1px solid var(--glass-border);margin-top:16px;text-align:center;">
+                <a href="#" class="back-to-citizen-link" onclick="closeAdminLoginModal(); return false;" style="font-size:0.82rem;color:var(--blue-accent);text-decoration:none;font-weight:600;" data-i18n="link_return_citizen">
+                    ← Return to Citizen Complaint Status
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ AUTHENTICATION MODAL (Quick User Login & Google Sign-In) ============ -->
+    <div class="modal-overlay" id="authModal" style="display:none;">
+        <div class="modal-backdrop" onclick="closeAuthModal()"></div>
+        <div class="auth-modal-dialog">
+            <div class="auth-modal-header">
+                <div class="auth-modal-brand">
+                    <img src="assets/logo.png" alt="RoadGuard Logo" class="auth-modal-logo">
+                    <div>
+                        <h3 data-i18n="auth_modal_portal_title">Citizen & Official Portal</h3>
+                        <p data-i18n="auth_modal_portal_sub">Sign in to RoadGuard Maharashtra</p>
+                    </div>
+                </div>
+                <button type="button" class="auth-modal-close" onclick="closeAuthModal()" title="Close" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="auth-modal-body">
+                <!-- Primary Action: Sign in with Google -->
+                <button type="button" class="google-sign-in-btn" id="modalGoogleBtn" onclick="openGooglePicker()">
+                    <svg class="google-svg-icon" viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span data-i18n="btn_signin_google">Sign in with Google</span>
+                </button>
+
+                <div class="auth-divider-line">
+                    <span data-i18n="lbl_or_signin_email">or sign in with email</span>
+                </div>
+
+                <!-- Auth Mode Tabs -->
+                <div class="auth-modal-tabs">
+                    <button type="button" class="auth-m-tab active" id="modalTabLogin" onclick="switchModalAuthTab('login')" data-i18n="tab_modal_signin">Sign In</button>
+                    <button type="button" class="auth-m-tab" id="modalTabSignup" onclick="switchModalAuthTab('signup')" data-i18n="tab_modal_register">Register (OTP)</button>
+                    <button type="button" class="auth-m-tab" id="modalTabAdmin" onclick="switchModalAuthTab('admin')"><i data-lucide="shield-check" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i><span data-i18n="tab_modal_admin">Official Admin</span></button>
+                </div>
+
+                <!-- Modal Login Form -->
+                <form id="modalLoginForm" class="auth-modal-form" onsubmit="handleModalEmailLogin(event)">
+                    <div class="auth-field">
+                        <label for="modalLoginEmail" data-i18n="lbl_email_address">Email Address</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="mail"></i>
+                            <input type="email" id="modalLoginEmail" placeholder="your@email.com" data-i18n-placeholder="ph_email_addr" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalLoginPassword" data-i18n="lbl_password_field">Password</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="lock"></i>
+                            <input type="password" id="modalLoginPassword" placeholder="Enter password" data-i18n-placeholder="ph_enter_password" required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <div class="auth-sub-row">
+                        <label class="remember-label">
+                            <input type="checkbox" id="modalRememberMe" checked>
+                            <span data-i18n="lbl_remember_me_check">Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-pwd-link" onclick="fillDemoUser('citizen'); return false;" data-i18n="link_quick_citizen_demo">Quick Demo Citizen</a>
+                    </div>
+                    <button type="submit" class="auth-submit-action-btn" id="modalLoginSubmitBtn">
+                        <i data-lucide="log-in"></i>
+                        <span data-i18n="btn_modal_signin_act">Sign In</span>
+                    </button>
+                    <div class="auth-feedback-msg" id="modalAuthError"></div>
+                </form>
+
+                <!-- Modal Signup Form -->
+                <form id="modalSignupForm" class="auth-modal-form hidden" onsubmit="handleModalSignup(event)">
+                    <div class="auth-field">
+                        <label for="modalSignupName" data-i18n="lbl_full_name">Full Name</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="user"></i>
+                            <input type="text" id="modalSignupName" placeholder="e.g. Ramesh Patil" data-i18n-placeholder="ph_full_name" required>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalSignupEmail" data-i18n="lbl_email_address">Email Address</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="mail"></i>
+                            <input type="email" id="modalSignupEmail" placeholder="ramesh@gmail.com" required>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalSignupPhone" data-i18n="lbl_mobile_10_digits">Mobile Number (10 Digits)</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="phone"></i>
+                            <input type="tel" id="modalSignupPhone" placeholder="9823012345" maxlength="10" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit-action-btn" id="btnModalSendOtp">
+                        <i data-lucide="phone"></i>
+                        <span data-i18n="btn_send_mobile_otp">Send Mobile OTP</span>
+                    </button>
+                    <div class="auth-feedback-msg" id="modalSignupError"></div>
+                </form>
+
+                <!-- Modal OTP Verification Panel -->
+                <div id="modalOtpPanel" class="auth-modal-form hidden">
+                    <div class="otp-header" style="margin-bottom:12px;">
+                        <div class="otp-icon" style="width:48px;height:48px;font-size:1.8rem;margin:0 auto 6px;">📱</div>
+                        <h4 style="font-size:1.15rem;font-weight:800;color:var(--text-primary);margin-bottom:4px;" data-i18n="otp_modal_verify_title">Verify Mobile OTP</h4>
+                        <p style="font-size:0.8rem;color:var(--text-muted);"><span data-i18n="otp_modal_sent_to">Sent to</span> <strong id="modalOtpPhoneDisplay">+91 ******1234</strong></p>
+                    </div>
+
+                    <!-- Live Simulated SMS Notification Banner for Modal -->
+                    <div class="otp-sms-banner" id="modalOtpSmsBanner">
+                        <div class="otp-sms-head">
+                            <span class="sms-badge" data-i18n="otp_modal_simulated_sms">📲 SIMULATED SMS</span>
+                            <span class="sms-sender">Govt-MH / RoadGuard</span>
+                        </div>
+                        <div class="otp-sms-body">
+                            <span><span data-i18n="otp_modal_your_otp">Your OTP is</span> <strong id="modalOtpDisplayCode">------</strong></span>
+                            <button type="button" class="btn-autofill-otp" onclick="autoFillModalOTP()" data-i18n="btn_modal_autofill">⚡ Auto-Fill</button>
+                        </div>
+                    </div>
+
+                    <div class="otp-inputs" id="modalOtpInputs">
+                        <input type="text" maxlength="1" class="otp-digit modal-otp-digit" data-index="0" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-digit modal-otp-digit" data-index="1" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-digit modal-otp-digit" data-index="2" inputmode="numeric">
+                        <span class="otp-dash">—</span>
+                        <input type="text" maxlength="1" class="otp-digit modal-otp-digit" data-index="3" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-digit modal-otp-digit" data-index="4" inputmode="numeric">
+                        <input type="text" maxlength="1" class="otp-digit modal-otp-digit" data-index="5" inputmode="numeric">
+                    </div>
+                    <div class="auth-feedback-msg" id="modalOtpError"></div>
+                    <button type="button" class="auth-submit-action-btn" id="btnModalVerifyOtp" onclick="verifyModalOTP()">
+                        <i data-lucide="check-circle"></i>
+                        <span data-i18n="btn_modal_verify_signin">Verify & Sign In</span>
+                    </button>
+                    <div class="otp-resend">
+                        <span id="modalOtpTimer"><span data-i18n="otp_modal_resend_in">Resend OTP in</span> <strong id="modalOtpCountdown">30</strong>s</span>
+                        <button id="modalResendOtpBtn" class="otp-resend-btn hidden" onclick="resendModalOTP()" data-i18n="btn_modal_resend_otp">🔄 Resend OTP</button>
+                    </div>
+                    <button type="button" class="otp-back-btn" onclick="backToModalSignup()" data-i18n="btn_modal_edit_phone">← Edit Phone Number</button>
+                </div>
+
+                <!-- Modal Official Admin Login Form -->
+                <form id="modalAdminForm" class="auth-modal-form hidden" onsubmit="handleModalAdminLogin(event)">
+                    <div class="auth-info-banner" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-md);background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);margin-bottom:16px;font-size:0.82rem;color:var(--text-secondary);">
+                        <i data-lucide="shield-check" style="width:20px;height:20px;color:var(--blue-accent);flex-shrink:0;"></i>
+                        <span data-i18n="pwd_admin_banner_mh">Authorized Maharashtra PWD road engineers & municipal officers only.</span>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalAdminUser" data-i18n="lbl_dept_officer_id">Department Officer ID / Username</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="user"></i>
+                            <input type="text" id="modalAdminUser" value="admin" required placeholder="admin">
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalAdminPass" data-i18n="lbl_security_pwd">Security Password</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="lock"></i>
+                            <input type="password" id="modalAdminPass" value="admin123" required placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit-action-btn" style="background:var(--navy);box-shadow:0 4px 15px rgba(15,23,42,0.3);margin-top:6px;">
+                        <i data-lucide="shield-check"></i>
+                        <span data-i18n="btn_admin_modal_gis">Authenticate & Access GIS Dashboard →</span>
+                    </button>
+                    <div style="margin-top:12px;text-align:center;font-size:0.8rem;color:var(--text-muted);">
+                        <span data-i18n="demo_officer_cred">Demo Officer Credential:</span> <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin</code> / <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin123</code>
+                    </div>
+                    <div class="auth-feedback-msg" id="modalAdminError"></div>
+                </form>
+            </div>
+
+            <!-- Footer: Admin / Official Login Link inside User Login Modal -->
+            <div class="auth-modal-footer">
+                <div class="auth-admin-switch-row" id="modalAdminSwitchRow">
+                    <span id="modalAdminSwitchText" data-i18n="admin_switch_prompt">PWD Officer or Municipal Administrator?</span>
+                    <button type="button" class="btn-admin-switch" id="modalAdminSwitchBtn" onclick="switchModalAuthTab('admin')">
+                        <i data-lucide="shield-check"></i>
+                        <span data-i18n="btn_admin_switch_login">Official Admin Login →</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ GOOGLE ACCOUNT PICKER MODAL (Authentic Google One-Tap Experience) ============ -->
+    <div class="google-picker-overlay" id="googleAccountPickerModal" style="display:none;">
+        <div class="google-picker-backdrop" onclick="closeGooglePicker()"></div>
+        <div class="google-picker-card">
+            <div class="google-picker-header">
+                <svg class="google-svg-logo" viewBox="0 0 24 24" width="28" height="28">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <div class="google-picker-title">
+                    <h4 data-i18n="google_picker_heading">Sign in with Google</h4>
+                    <p data-i18n="google_picker_subheading">Choose an account to continue to RoadGuard Maharashtra</p>
+                </div>
+                <button type="button" class="google-picker-close" onclick="closeGooglePicker()" title="Close" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="google-picker-accounts">
+                <!-- Account Option 1: Pravin Kumar -->
+                <button type="button" class="google-account-row" onclick="selectGoogleAccount('pravin')">
+                    <div class="google-avatar-circle" style="background:#1A73E8;">P</div>
+                    <div class="google-account-details">
+                        <div class="google-name">Pravin Kumar</div>
+                        <div class="google-email">pravin.pwd@gmail.com</div>
+                    </div>
+                    <span class="google-tag" data-i18n="google_acc_tag_civic">PWD Civic</span>
+                </button>
+
+                <!-- Account Option 2: Maharashtra Citizen -->
+                <button type="button" class="google-account-row" onclick="selectGoogleAccount('citizen')">
+                    <div class="google-avatar-circle" style="background:#F97316;">M</div>
+                    <div class="google-account-details">
+                        <div class="google-name">Maharashtra Citizen</div>
+                        <div class="google-email">citizen.mh@gmail.com</div>
+                    </div>
+                    <span class="google-tag" data-i18n="google_acc_tag_resident">Resident</span>
+                </button>
+
+                <!-- Account Option 3: Custom Google Account -->
+                <button type="button" class="google-account-row" onclick="selectGoogleAccount('custom')">
+                    <div class="google-avatar-circle" style="background:#5F6368;"><i data-lucide="user"></i></div>
+                    <div class="google-account-details">
+                        <div class="google-name" data-i18n="google_use_another">Use another account</div>
+                        <div class="google-email" data-i18n="google_enter_personal_email">Enter your personal Google email</div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="google-picker-footer">
+                <p><span data-i18n="google_privacy_text">To continue, Google will share your name, email address, and profile picture with RoadGuard Maharashtra. See our</span> <a href="#" data-page="about" data-i18n="privacy_policy_text">Privacy Policy</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MOBILE BOTTOM BAR (Mobile-First) ============ -->
+    <div class="mobile-bottom-nav" id="mobileBottomNav">
+        <a href="#" class="mobile-nav-item active" data-page="home">
+            <span class="m-icon"><i data-lucide="home"></i></span>
+            <span class="m-label" data-i18n="mob_nav_home">Home</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-page="track">
+            <span class="m-icon"><i data-lucide="search"></i></span>
+            <span class="m-label" data-i18n="mob_nav_track">Track</span>
+        </a>
+        <a href="#" class="mobile-nav-item mobile-report-fab" data-page="report">
+            <span class="m-icon"><i data-lucide="camera"></i></span>
+            <span class="m-label" data-i18n="mob_nav_report">Report</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-page="dashboard">
+            <span class="m-icon"><i data-lucide="layout-dashboard"></i></span>
+            <span class="m-label" data-i18n="mob_nav_admin">Admin</span>
+        </a>
+        <a href="#" class="mobile-nav-item" data-page="login" id="mobileNavUser" onclick="openAuthModal('login'); return false;">
+            <span class="m-icon"><i data-lucide="user"></i></span>
+            <span class="m-label" id="mobileNavUserLabel" data-i18n="mob_nav_login">Login</span>
+        </a>
     </div>
 
     <!-- ============ FOOTER ============ -->
@@ -670,32 +1615,36 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <h3>🛣️ RoadGuard Maharashtra</h3>
-                    <p>A citizen-driven road damage reporting platform by the Government of Maharashtra. Building safer
+                    <div class="footer-brand-header">
+                        <img src="assets/logo.png" alt="RoadGuard Logo" class="footer-logo">
+                        <h3><span class="brand-text-road">Road</span><span class="brand-text-guard">Guard</span> Maharashtra</h3>
+                    </div>
+                    <p data-i18n="footer_about_text">A citizen-driven road damage reporting platform by the Government of Maharashtra. Building safer
                         roads, one report at a time.</p>
-                    <p style="margin-top:8px;">Smart India Hackathon (SIH) Project</p>
+                    <p style="margin-top:8px;" data-i18n="footer_sih_label">Smart India Hackathon (SIH) Project</p>
                 </div>
                 <div class="footer-links">
-                    <h4>Quick Links</h4>
-                    <a href="#" data-page="home">Home</a>
-                    <a href="#" data-page="report">Report Pothole</a>
-                    <a href="#" data-page="track">Track Complaint</a>
-                    <a href="#" data-page="about">About</a>
+                    <h4 data-i18n="footer_quick_links_title">Quick Links</h4>
+                    <a href="#" data-page="home" data-i18n="nav_home">Home</a>
+                    <a href="#" data-page="report" data-i18n="btn_report_main">Report Pothole</a>
+                    <a href="#" data-page="track" data-i18n="nav_track">Track Complaint</a>
+                    <a href="#" data-page="about" data-i18n="nav_about">About</a>
                 </div>
                 <div class="footer-links">
-                    <h4>Government</h4>
-                    <a href="#">Maharashtra PWD</a>
-                    <a href="#">Municipal Corporation</a>
-                    <a href="#">RTI Information</a>
-                    <a href="#">Grievance Portal</a>
+                    <h4 data-i18n="footer_gov_title">Government</h4>
+                    <a href="#" data-i18n="footer_link_pwd">Maharashtra PWD</a>
+                    <a href="#" data-i18n="footer_link_mc">Municipal Corporation</a>
+                    <a href="#" data-i18n="footer_link_rti">RTI Information</a>
+                    <a href="#" data-i18n="footer_link_grievance">Grievance Portal</a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>© 2026 Government of Maharashtra — RoadGuard. All rights reserved. | Smart India Hackathon</p>
+                <p data-i18n="footer_bottom_copyright">© 2026 Government of Maharashtra — RoadGuard. All rights reserved. | Smart India Hackathon</p>
             </div>
         </div>
     </footer>
 
+    <script src="js/icons.js"></script>
     <script src="js/data.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/app.js"></script>

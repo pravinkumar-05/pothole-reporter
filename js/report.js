@@ -174,7 +174,7 @@ function readRationals(view, tiffStart, valueOffset, count, littleEndian) {
 }
 
 // ============================================================
-// IMAGE UPLOAD & CAMERA HANDLING
+// IMAGE UPLOAD & LIVE CAMERA VIEWFINDER HANDLING
 // ============================================================
 const uploadZone = document.getElementById('uploadZone');
 const imageInput = document.getElementById('imageInput');
@@ -182,10 +182,14 @@ const cameraInput = document.getElementById('cameraInput');
 const imagePreview = document.getElementById('imagePreview');
 const previewImg = document.getElementById('previewImg');
 
-// Open Camera button — triggers camera input
+let activeCameraStream = null;
+let currentFacingMode = 'environment';
+let liveCameraCoords = null;
+
+// Open Camera button — triggers Live Camera Viewfinder
 document.getElementById('btnOpenCamera').addEventListener('click', (e) => {
     e.stopPropagation();
-    cameraInput.click();
+    openLiveCamera();
 });
 
 // Browse File button — triggers file picker
@@ -194,13 +198,11 @@ document.getElementById('btnBrowseFile').addEventListener('click', (e) => {
     imageInput.click();
 });
 
-// Drag and drop still works on the upload zone
+// Drag and drop on upload zone
 uploadZone.addEventListener('click', (e) => {
-    // Only trigger if clicking on the zone itself, not the buttons
-    if (e.target === uploadZone || e.target.classList.contains('upload-icon') || 
-        e.target.tagName === 'H3' || (e.target.tagName === 'P' && !e.target.id)) {
-        imageInput.click();
-    }
+    // Only trigger if clicking on the zone background/texts, not buttons
+    if (e.target.closest('#btnOpenCamera') || e.target.closest('#btnBrowseFile')) return;
+    imageInput.click();
 });
 uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
 uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
@@ -212,6 +214,142 @@ uploadZone.addEventListener('drop', (e) => {
 // File inputs
 cameraInput.addEventListener('change', () => { if (cameraInput.files.length) handleImageFile(cameraInput.files[0]); });
 imageInput.addEventListener('change', () => { if (imageInput.files.length) handleImageFile(imageInput.files[0]); });
+
+// Live Camera Functions
+async function openLiveCamera() {
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    const gpsStatusText = document.getElementById('cameraGpsText');
+
+    // Pre-fetch device GPS location while viewfinder starts
+    liveCameraCoords = null;
+    if (gpsStatusText) gpsStatusText.textContent = 'Detecting GPS location...';
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                liveCameraCoords = {
+                    lat: parseFloat(pos.coords.latitude.toFixed(6)),
+                    lng: parseFloat(pos.coords.longitude.toFixed(6))
+                };
+                if (gpsStatusText) {
+                    gpsStatusText.textContent = `GPS Locked: ${liveCameraCoords.lat}, ${liveCameraCoords.lng}`;
+                }
+            },
+            (err) => {
+                console.warn('Live camera GPS fetch:', err);
+                if (gpsStatusText) gpsStatusText.textContent = 'GPS: Pin on Map in Step 2';
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+        );
+    }
+
+    // Attempt to access user device camera via getUserMedia
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            if (activeCameraStream) {
+                activeCameraStream.getTracks().forEach(t => t.stop());
+            }
+
+            const constraints = {
+                video: {
+                    facingMode: { ideal: currentFacingMode },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            activeCameraStream = stream;
+            video.srcObject = stream;
+            modal.style.display = 'flex';
+            if (typeof renderAllIcons === 'function') renderAllIcons(modal);
+            return;
+        } catch (err) {
+            console.warn('getUserMedia camera stream failed, falling back to native camera input:', err);
+        }
+    }
+
+    // Graceful fallback for non-HTTPS or denied permissions: trigger native camera input
+    cameraInput.click();
+}
+
+function closeLiveCamera() {
+    const modal = document.getElementById('cameraModal');
+    if (activeCameraStream) {
+        activeCameraStream.getTracks().forEach(t => t.stop());
+        activeCameraStream = null;
+    }
+    const video = document.getElementById('cameraVideo');
+    if (video) video.srcObject = null;
+    if (modal) modal.style.display = 'none';
+}
+
+async function flipCamera() {
+    currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+    await openLiveCamera();
+}
+
+function takeLiveSnapshot() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const flash = document.getElementById('cameraFlash');
+    if (!video || !canvas) return;
+
+    // Trigger visual flash
+    if (flash) {
+        flash.classList.add('flash');
+        setTimeout(() => flash.classList.remove('flash'), 250);
+    }
+
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    // Apply captured photo
+    applyCapturedPhoto(dataUrl, liveCameraCoords);
+
+    // Close camera stream
+    setTimeout(() => {
+        closeLiveCamera();
+    }, 200);
+}
+
+async function applyCapturedPhoto(dataUrl, gpsCoords) {
+    reportData.imageData = dataUrl;
+    uploadZone.style.display = 'none';
+    imagePreview.style.display = 'block';
+    previewImg.src = dataUrl;
+    previewImg.alt = 'Captured Pothole';
+
+    // Default coords if GPS not available (Maharashtra coordinates)
+    const coords = gpsCoords || { lat: 19.0760, lng: 72.8777 };
+    reportData.location = {
+        lat: coords.lat,
+        lng: coords.lng,
+        address: `${coords.lat.toFixed(4)}° N, ${coords.lng.toFixed(4)}° E (Device Camera Geotag)`
+    };
+
+    // Show geotag badge
+    document.getElementById('geotagInfo').style.display = 'block';
+    document.getElementById('geotagCoords').textContent = `Lat: ${reportData.location.lat}, Lng: ${reportData.location.lng} — ${reportData.location.address}`;
+    document.getElementById('geotagError').style.display = 'none';
+    document.getElementById('step1Error').style.display = 'none';
+
+    // Pre-populate Step 2 location
+    const addrEl = document.getElementById('locationAddress');
+    const coordsEl = document.getElementById('locationCoords');
+    if (addrEl) addrEl.textContent = reportData.location.address;
+    if (coordsEl) coordsEl.textContent = `Coordinates: ${reportData.location.lat}, ${reportData.location.lng}`;
+
+    if (reportMarker && reportMap) {
+        reportMarker.setLatLng([reportData.location.lat, reportData.location.lng]);
+        reportMap.setView([reportData.location.lat, reportData.location.lng], 16);
+    }
+}
 
 // Remove image
 document.getElementById('removeImage').addEventListener('click', () => {
@@ -241,20 +379,26 @@ async function handleImageFile(file) {
     previewImg.alt = 'Processing...';
 
     // Extract GPS from EXIF
-    const gps = await extractExifGPS(file);
+    let gps = await extractExifGPS(file);
 
     if (!gps) {
-        // No geotag — reject the photo
-        imagePreview.style.display = 'none';
-        uploadZone.style.display = '';
-        document.getElementById('geotagError').style.display = 'block';
-        reportData.imageData = null;
-        imageInput.value = '';
-        cameraInput.value = '';
-        return;
+        // Fallback: If EXIF has no GPS (common in web browsers), auto-detect device location so the user can proceed!
+        try {
+            const pos = await new Promise((res, rej) => {
+                if (!navigator.geolocation) return rej(new Error('Geolocation not available'));
+                navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000 });
+            });
+            gps = {
+                lat: parseFloat(pos.coords.latitude.toFixed(6)),
+                lng: parseFloat(pos.coords.longitude.toFixed(6))
+            };
+        } catch (e) {
+            // Default to Maharashtra coordinates for manual adjustment in Step 2
+            gps = { lat: 19.0760, lng: 72.8777 };
+        }
     }
 
-    // Photo has geotag — accept it
+    // Photo accepted
     const reader = new FileReader();
     reader.onload = (e) => {
         reportData.imageData = e.target.result;
@@ -270,7 +414,7 @@ async function handleImageFile(file) {
     document.getElementById('geotagCoords').textContent = `Lat: ${gps.lat.toFixed(6)}, Lng: ${gps.lng.toFixed(6)}`;
 
     // Auto-set location from geotag
-    reportData.location = { lat: gps.lat, lng: gps.lng, address: '' };
+    reportData.location = { lat: gps.lat, lng: gps.lng, address: `${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)}` };
 
     // Reverse geocode the geotag location
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${gps.lat}&lon=${gps.lng}`)
@@ -279,6 +423,8 @@ async function handleImageFile(file) {
             const addr = data.display_name || `${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)}`;
             reportData.location.address = addr;
             document.getElementById('geotagCoords').textContent = `Lat: ${gps.lat.toFixed(6)}, Lng: ${gps.lng.toFixed(6)} — ${addr}`;
+            const locAddr = document.getElementById('locationAddress');
+            if (locAddr) locAddr.textContent = addr;
         })
         .catch(() => {
             reportData.location.address = `${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)}`;
@@ -373,14 +519,33 @@ document.getElementById('step4Prev').addEventListener('click', () => showStep(3)
 // ---- Build Review ----
 function buildReview() {
     const grid = document.getElementById('reviewGrid');
+    const nameVal = document.getElementById('userName').value;
+    const phoneVal = document.getElementById('userPhone').value;
+    const emailVal = document.getElementById('userEmail').value || 'N/A';
+    const sevVal = document.getElementById('severity').value;
+    const roadVal = document.getElementById('roadType').value;
+    const descVal = document.getElementById('description').value;
+
+    const lblName = (typeof t === 'function') ? t('lbl_name') : 'Name';
+    const lblPhone = (typeof t === 'function') ? t('lbl_phone') : 'Phone';
+    const lblEmail = (typeof t === 'function') ? t('lbl_email') : 'Email';
+    const lblSeverity = (typeof t === 'function') ? t('lbl_severity') : 'Severity';
+    const lblRoadType = (typeof t === 'function') ? t('lbl_road_type') : 'Road Type';
+    const lblLocation = (typeof t === 'function') ? t('lbl_location') : 'Location';
+    const lblDesc = (typeof t === 'function') ? t('lbl_description') : 'Description';
+
+    const localizedSev = (typeof t === 'function' && t('sev_' + sevVal)) ? t('sev_' + sevVal) : sevVal;
+    const roadKey = 'road_' + (roadVal || 'state-highway').replace(/-/g, '_');
+    const localizedRoad = (typeof t === 'function' && t(roadKey)) ? t(roadKey) : roadVal.replace(/-/g, ' ');
+
     grid.innerHTML = `
-        <div class="detail-item"><label>Name</label><p>${document.getElementById('userName').value}</p></div>
-        <div class="detail-item"><label>Phone</label><p>${document.getElementById('userPhone').value}</p></div>
-        <div class="detail-item"><label>Email</label><p>${document.getElementById('userEmail').value || 'N/A'}</p></div>
-        <div class="detail-item"><label>Severity</label><p><span class="severity-badge severity-${document.getElementById('severity').value}">${document.getElementById('severity').value}</span></p></div>
-        <div class="detail-item"><label>Road Type</label><p>${document.getElementById('roadType').value.replace(/-/g,' ')}</p></div>
-        <div class="detail-item"><label>Location</label><p>${reportData.location?.address || 'Set'}</p></div>
-        <div class="detail-item full-width"><label>Description</label><p>${document.getElementById('description').value}</p></div>
+        <div class="detail-item"><label>${lblName}</label><p>${escapeHtml(nameVal)}</p></div>
+        <div class="detail-item"><label>${lblPhone}</label><p>${escapeHtml(phoneVal)}</p></div>
+        <div class="detail-item"><label>${lblEmail}</label><p>${escapeHtml(emailVal)}</p></div>
+        <div class="detail-item"><label>${lblSeverity}</label><p><span class="severity-badge severity-${sevVal}">${localizedSev}</span></p></div>
+        <div class="detail-item"><label>${lblRoadType}</label><p>${localizedRoad}</p></div>
+        <div class="detail-item"><label>${lblLocation}</label><p>${escapeHtml(reportData.location?.address || 'Set')}</p></div>
+        <div class="detail-item full-width"><label>${lblDesc}</label><p>${escapeHtml(descVal)}</p></div>
     `;
 }
 

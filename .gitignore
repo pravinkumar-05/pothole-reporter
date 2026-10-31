@@ -4,3 +4,5 @@ database.sqlite
 *.log
 .DS_Store
 Thumbs.db
+.idea/
+
