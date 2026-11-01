@@ -138,7 +138,7 @@ function handleAdminModalLogin(e) {
         }
         showAdminDashboard();
     } else {
-        alert('Authentication failed: Invalid credentials. Use demo: admin / admin123');
+        alert('Authentication failed: Invalid credentials. Please enter valid admin username and password.');
     }
     return false;
 }
@@ -183,10 +183,6 @@ async function renderCitizenDashboardComplaints() {
             (c.name && user.name && c.name.toLowerCase().includes(user.name.toLowerCase())) ||
             (c.phone && user.phone && c.phone === user.phone)
         );
-        // If user logged in but has no registered complaints, show sample complaints for rich UX
-        if (citizenComplaints.length === 0) {
-            citizenComplaints = complaints;
-        }
     } else {
         citizenComplaints = complaints;
     }
@@ -718,33 +714,82 @@ async function viewComplaint(id) {
         ${c.location?.lat ? `<div class="detail-map" id="modalMap" style="height:190px;border-radius:var(--radius-md);margin-bottom:16px;"></div>` : ''}
 
         <!-- Official PWD Status Management & Crew Dispatch -->
-        <div class="inspect-action-card">
-            <h4 style="font-size:0.88rem;font-weight:800;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                <i data-lucide="shield-check" style="width:16px;height:16px;color:var(--saffron);"></i>
-                Official PWD Status Update & Crew Dispatch
-            </h4>
-            <div style="display:flex;flex-direction:column;gap:12px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                        <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;display:block;">Change Status</label>
-                        <select id="newStatus" style="width:100%;padding:9px;border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--input-border);color:var(--input-text);font-weight:600;">
-                            <option value="pending" ${c.status==='pending'?'selected':''}>Pending Inspection</option>
-                            <option value="under-review" ${c.status==='under-review'?'selected':''}>Under Review by Ward Engineer</option>
-                            <option value="in-progress" ${c.status==='in-progress'?'selected':''}>Work In Progress (Crew Dispatched)</option>
-                            <option value="resolved" ${c.status==='resolved'?'selected':''}>Works Done / Resolved (Repaired)</option>
-                        </select>
+        ${(() => {
+            const isAdmin = (typeof isAdminLoggedIn === 'function') && isAdminLoggedIn();
+            const currentUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+            const isOwner = currentUser && (
+                (c.email && currentUser.email && c.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+                (c.phone && currentUser.phone && c.phone === currentUser.phone)
+            );
+            if (isAdmin) {
+                return `
+                <div class="inspect-action-card">
+                    <h4 style="font-size:0.88rem;font-weight:800;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        <i data-lucide="shield-check" style="width:16px;height:16px;color:var(--saffron);"></i>
+                        Official PWD Status Update & Crew Dispatch
+                    </h4>
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div>
+                                <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;display:block;">Change Status</label>
+                                <select id="newStatus" style="width:100%;padding:9px;border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--input-border);color:var(--input-text);font-weight:600;">
+                                    <option value="pending" ${c.status==='pending'?'selected':''}>Pending Inspection</option>
+                                    <option value="under-review" ${c.status==='under-review'?'selected':''}>Under Review by Ward Engineer</option>
+                                    <option value="in-progress" ${c.status==='in-progress'?'selected':''}>Work In Progress (Crew Dispatched)</option>
+                                    <option value="resolved" ${c.status==='resolved'?'selected':''}>Works Done / Resolved (Repaired)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;display:block;">Officer Action Note / Remark</label>
+                                <input type="text" id="statusNote" value="${escapeHtml(c.statusNote || '')}" placeholder="e.g. Hot-mix compactor crew dispatched..." style="width:100%;padding:9px;border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--input-border);color:var(--input-text);">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-admin-save-status" onclick="updateStatus('${c.id}')">
+                            <i data-lucide="check"></i>
+                            <span>Save Status & Dispatch Action</span>
+                        </button>
                     </div>
-                    <div>
-                        <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;display:block;">Officer Action Note / Remark</label>
-                        <input type="text" id="statusNote" value="${escapeHtml(c.statusNote || '')}" placeholder="e.g. Hot-mix compactor crew dispatched..." style="width:100%;padding:9px;border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--input-border);color:var(--input-text);">
+                </div>`;
+            } else if (isOwner) {
+                return `
+                <div class="inspect-action-card" style="border-left:3px solid var(--green);">
+                    <h4 style="font-size:0.88rem;font-weight:800;color:var(--text-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                        <i data-lucide="edit-3" style="width:16px;height:16px;color:var(--green);"></i>
+                        Your Complaint — Edit Details & Notes
+                    </h4>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">
+                        As the citizen who registered this complaint, you can update the damage description and urgency level.
+                    </p>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div>
+                            <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;display:block;">Update Description</label>
+                            <textarea id="ownerEditDesc" style="width:100%;min-height:65px;padding:9px;border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--input-border);color:var(--input-text);font-size:0.86rem;resize:vertical;">${escapeHtml(c.description || '')}</textarea>
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;display:block;">Severity Level</label>
+                            <select id="ownerEditSeverity" style="width:100%;padding:9px;border-radius:var(--radius-md);background:var(--input-bg);border:1px solid var(--input-border);color:var(--input-text);font-weight:600;">
+                                <option value="low" ${c.severity==='low'?'selected':''}>Low (Surface crack/Minor depression)</option>
+                                <option value="medium" ${c.severity==='medium'?'selected':''}>Medium (Moderate pothole)</option>
+                                <option value="high" ${c.severity==='high'?'selected':''}>High (Deep crater/Traffic hazard)</option>
+                                <option value="critical" ${c.severity==='critical'?'selected':''}>Critical (Accident-prone crater)</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-primary" style="padding:10px 16px;font-size:0.86rem;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="saveOwnerComplaintEdit('${c.id}')">
+                            <i data-lucide="check"></i>
+                            <span>Save My Updates</span>
+                        </button>
                     </div>
-                </div>
-                <button type="button" class="btn-admin-save-status" onclick="updateStatus('${c.id}')">
-                    <i data-lucide="check"></i>
-                    <span>Save Status & Dispatch Action</span>
-                </button>
-            </div>
-        </div>
+                </div>`;
+            } else {
+                return `
+                <div class="inspect-action-card" style="opacity:0.85;background:var(--bg-card);border:1px dashed var(--glass-border);">
+                    <p style="font-size:0.82rem;color:var(--text-muted);text-align:center;padding:10px 0;margin:0;">
+                        <i data-lucide="lock" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:4px;"></i>
+                        Protected Record: Only the citizen who registered this complaint (${escapeHtml(c.name || 'Reporter')}) and PWD administrators can edit this report.
+                    </p>
+                </div>`;
+            }
+        })()}
     `;
 
     document.getElementById('complaintModal').classList.add('show');
@@ -781,6 +826,25 @@ async function updateStatus(id) {
     renderComplaintsTable();
     renderDashboardFeed();
     renderRegisteredUsers();
+}
+
+async function saveOwnerComplaintEdit(id) {
+    const desc = document.getElementById('ownerEditDesc')?.value.trim();
+    const severity = document.getElementById('ownerEditSeverity')?.value;
+    if (!desc) {
+        alert('Please enter a description for the complaint.');
+        return;
+    }
+    if (typeof updateComplaintDetails === 'function') {
+        await updateComplaintDetails(id, { description: desc, severity });
+    }
+    if (typeof showAuthToast === 'function') {
+        showAuthToast(`Complaint ${id} updated successfully!`);
+    }
+    document.getElementById('complaintModal')?.classList.remove('show');
+    if (typeof renderCitizenDashboard === 'function') renderCitizenDashboard();
+    if (typeof renderRecentComplaints === 'function') renderRecentComplaints();
+    if (typeof renderUserActivities === 'function') renderUserActivities();
 }
 
 // Close modal

@@ -624,12 +624,12 @@
                             </div>
                             <div class="form-group">
                                 <label data-i18n="lbl_officer_id">Department Officer ID / Username</label>
-                                <input type="text" id="adminPageUser" value="admin" required placeholder="admin">
+                                <input type="text" id="adminPageUser" required placeholder="Enter officer username">
                             </div>
                             <div class="form-group">
                                 <label data-i18n="lbl_access_password">Access Security Password</label>
                                 <div class="password-field">
-                                    <input type="password" id="adminPagePassword" value="admin123" required placeholder="••••••••">
+                                    <input type="password" id="adminPagePassword" required placeholder="Enter password">
                                     <button type="button" class="toggle-password" onclick="togglePassword('adminPagePassword', this)">👁️</button>
                                 </div>
                             </div>
@@ -637,9 +637,6 @@
                                 <i data-lucide="shield-check" style="width:16px;height:16px;display:inline-block;vertical-align:-2px;margin-right:6px;"></i>
                                 <span data-i18n="btn_admin_auth">Authenticate & Access GIS Dashboard →</span>
                             </button>
-                            <div style="margin-top:14px;text-align:center;font-size:0.82rem;color:var(--text-muted);">
-                                <span data-i18n="admin_demo_cred">Demo Officer Credential:</span> <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin</code> / <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin123</code>
-                            </div>
                             <p class="auth-error" id="adminPageError"></p>
                         </form>
 
@@ -1317,23 +1314,20 @@
                         <label for="adminModalUser" style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:var(--text-secondary);" data-i18n="lbl_dept_officer_id">Department Officer ID / Username</label>
                         <div class="input-with-icon">
                             <i data-lucide="user" class="input-icon"></i>
-                            <input type="text" id="adminModalUser" class="auth-input" value="admin" required placeholder="admin">
+                            <input type="text" id="adminModalUser" class="auth-input" required placeholder="Enter officer username">
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom:18px;">
                         <label for="adminModalPass" style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:var(--text-secondary);" data-i18n="lbl_access_sec_password">Access Security Password</label>
                         <div class="input-with-icon">
                             <i data-lucide="lock" class="input-icon"></i>
-                            <input type="password" id="adminModalPass" class="auth-input" value="admin123" required placeholder="••••••••">
+                            <input type="password" id="adminModalPass" class="auth-input" required placeholder="Enter password">
                         </div>
                     </div>
                     <button type="submit" class="auth-submit-btn" style="width:100%;padding:12px;background:var(--navy);color:#FFFFFF;border:none;border-radius:var(--radius-md);font-weight:700;font-size:0.92rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(15,23,42,0.25);">
                         <i data-lucide="shield-check"></i>
                         <span data-i18n="btn_auth_dash_arrow">Authenticate & Access Dashboard →</span>
                     </button>
-                    <div style="margin-top:14px; text-align:center; font-size:0.8rem; color:var(--text-muted);">
-                        <span data-i18n="demo_officer_cred">Demo Officer Credential:</span> <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin</code> / <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin123</code>
-                    </div>
                 </form>
             </div>
             <div class="auth-modal-footer" style="padding-top:14px;border-top:1px solid var(--glass-border);margin-top:16px;text-align:center;">
@@ -1405,7 +1399,6 @@
                             <input type="checkbox" id="modalRememberMe" checked>
                             <span data-i18n="lbl_remember_me_check">Remember me</span>
                         </label>
-                        <a href="#" class="forgot-pwd-link" onclick="fillDemoUser('citizen'); return false;" data-i18n="link_quick_citizen_demo">Quick Demo Citizen</a>
                     </div>
                     <button type="submit" class="auth-submit-action-btn" id="modalLoginSubmitBtn">
                         <i data-lucide="log-in"></i>
@@ -1435,6 +1428,20 @@
                         <div class="auth-input-wrapper">
                             <i data-lucide="phone"></i>
                             <input type="tel" id="modalSignupPhone" placeholder="9823012345" maxlength="10" required>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalSignupPassword" data-i18n="lbl_password">Password</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="lock"></i>
+                            <input type="password" id="modalSignupPassword" placeholder="Create password (min 6 chars)" required autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="modalSignupConfirm" data-i18n="lbl_confirm_password">Confirm Password</label>
+                        <div class="auth-input-wrapper">
+                            <i data-lucide="lock"></i>
+                            <input type="password" id="modalSignupConfirm" placeholder="Confirm password" required autocomplete="new-password">
                         </div>
                     </div>
                     <button type="submit" class="auth-submit-action-btn" id="btnModalSendOtp">
@@ -1495,23 +1502,20 @@
                         <label for="modalAdminUser" data-i18n="lbl_dept_officer_id">Department Officer ID / Username</label>
                         <div class="auth-input-wrapper">
                             <i data-lucide="user"></i>
-                            <input type="text" id="modalAdminUser" value="admin" required placeholder="admin">
+                            <input type="text" id="modalAdminUser" required placeholder="Enter officer username">
                         </div>
                     </div>
                     <div class="auth-field">
                         <label for="modalAdminPass" data-i18n="lbl_security_pwd">Security Password</label>
                         <div class="auth-input-wrapper">
                             <i data-lucide="lock"></i>
-                            <input type="password" id="modalAdminPass" value="admin123" required placeholder="••••••••">
+                            <input type="password" id="modalAdminPass" required placeholder="Enter password">
                         </div>
                     </div>
                     <button type="submit" class="auth-submit-action-btn" style="background:var(--navy);box-shadow:0 4px 15px rgba(15,23,42,0.3);margin-top:6px;">
                         <i data-lucide="shield-check"></i>
                         <span data-i18n="btn_admin_modal_gis">Authenticate & Access GIS Dashboard →</span>
                     </button>
-                    <div style="margin-top:12px;text-align:center;font-size:0.8rem;color:var(--text-muted);">
-                        <span data-i18n="demo_officer_cred">Demo Officer Credential:</span> <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin</code> / <code style="background:var(--bg-surface-elevated);padding:2px 6px;border-radius:4px;font-weight:700;color:var(--saffron);">admin123</code>
-                    </div>
                     <div class="auth-feedback-msg" id="modalAdminError"></div>
                 </form>
             </div>

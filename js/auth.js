@@ -121,6 +121,12 @@ function findUser(email) {
 function registerUser(user) {
     const users = getUsersDB();
     if (findUser(user.email)) return false;
+    // Ensure all fields needed for admin users table
+    if (!user.registeredAt) user.registeredAt = new Date().toISOString();
+    if (!user.role) user.role = 'Citizen Reporter';
+    if (!user.verified) user.verified = true;
+    if (!user.district) user.district = 'Maharashtra';
+    if (!user.provider) user.provider = 'email';
     users.push(user);
     saveUsersDB(users);
     return true;
@@ -741,26 +747,44 @@ document.getElementById('verifyOtpBtn').addEventListener('click', () => {
     });
 
     setTimeout(() => {
-        // Register user
+        // Register user into users list
         if (typeof adminLogout === 'function') adminLogout();
+        const registeredEmail = pendingSignupData?.email || '';
+        const registeredName = pendingSignupData?.name || 'Citizen';
+
         if (pendingSignupData) {
-            registerUser(pendingSignupData);
-            setCurrentUser({
+            registerUser({
                 name: pendingSignupData.name,
                 email: pendingSignupData.email,
                 phone: pendingSignupData.phone,
+                password: pendingSignupData.password,
+                role: 'Citizen Reporter',
+                registeredAt: new Date().toISOString(),
+                district: 'Maharashtra',
                 provider: 'email',
                 verified: true
-            }, false);
+            });
         }
 
         clearOtpTimer();
         closeOtpToast();
         btn.classList.remove('loading');
         btn.textContent = '✅ Verify & Create Account';
-        updateNavAuth();
-        showLoginSuccess(pendingSignupData?.name || 'User');
         pendingSignupData = null;
+
+        // Redirect directly to login form — do NOT sign in automatically
+        switchAuthTab('login');
+        const loginEmailInput = document.getElementById('loginEmail');
+        if (loginEmailInput) {
+            loginEmailInput.value = registeredEmail;
+        }
+        const loginPwdInput = document.getElementById('loginPassword');
+        if (loginPwdInput) {
+            loginPwdInput.value = '';
+            loginPwdInput.focus();
+        }
+
+        showAuthToast(`Registration successful, ${registeredName}! Please login with your credentials.`);
     }, 1200);
 });
 
@@ -965,12 +989,8 @@ function showAuthToast(msg) {
 }
 
 function fillDemoUser(type) {
-    const emailInput = document.getElementById('modalLoginEmail');
-    const pwdInput = document.getElementById('modalLoginPassword');
-    if (type === 'citizen') {
-        if (emailInput) emailInput.value = 'citizen.mh@gmail.com';
-        if (pwdInput) pwdInput.value = 'roadguard123';
-    }
+    // Demo credential auto-fill disabled for security
+    return;
 }
 
 function handleModalEmailLogin(e) {
@@ -998,14 +1018,15 @@ function handleModalEmailLogin(e) {
 
     let user = findUser(email);
     if (!user) {
-        user = {
-            name: email.split('@')[0],
-            email: email,
-            phone: '9823012345',
-            password: password,
-            provider: 'email'
-        };
-        registerUser(user);
+        const err = document.getElementById('modalAuthError');
+        if (err) err.textContent = 'No account found with this email. Please sign up first.';
+        return;
+    }
+
+    if (user.password && user.password !== password) {
+        const err = document.getElementById('modalAuthError');
+        if (err) err.textContent = 'Incorrect password. Please try again.';
+        return;
     }
 
     if (typeof adminLogout === 'function') adminLogout();
@@ -1013,7 +1034,7 @@ function handleModalEmailLogin(e) {
         name: user.name,
         email: user.email,
         phone: user.phone || '9823012345',
-        provider: 'email'
+        provider: user.provider || 'email'
     }, remember);
 
     updateNavAuth();
@@ -1030,8 +1051,10 @@ function handleModalSignup(e) {
     const name = document.getElementById('modalSignupName')?.value.trim();
     const email = document.getElementById('modalSignupEmail')?.value.trim();
     const phone = document.getElementById('modalSignupPhone')?.value.trim();
+    const password = document.getElementById('modalSignupPassword')?.value;
+    const confirm = document.getElementById('modalSignupConfirm')?.value;
 
-    if (!name || !email || !phone) {
+    if (!name || !email || !phone || !password || !confirm) {
         const err = document.getElementById('modalSignupError');
         if (err) err.textContent = 'Please fill in all fields.';
         return;
@@ -1041,8 +1064,23 @@ function handleModalSignup(e) {
         if (err) err.textContent = 'Please enter a valid 10-digit mobile number.';
         return;
     }
+    if (password.length < 6) {
+        const err = document.getElementById('modalSignupError');
+        if (err) err.textContent = 'Password must be at least 6 characters.';
+        return;
+    }
+    if (password !== confirm) {
+        const err = document.getElementById('modalSignupError');
+        if (err) err.textContent = 'Passwords do not match.';
+        return;
+    }
+    if (findUser(email)) {
+        const err = document.getElementById('modalSignupError');
+        if (err) err.textContent = 'An account with this email already exists.';
+        return;
+    }
 
-    modalPendingSignupData = { name, email, phone, provider: 'phone-otp' };
+    modalPendingSignupData = { name, email, phone, password, provider: 'email' };
 
     // Transition to Modal OTP Panel
     document.getElementById('modalSignupForm')?.classList.add('hidden');
@@ -1103,30 +1141,44 @@ function verifyModalOTP() {
         return;
     }
 
-    // Success: register and log in
+    // Success: register user into database
     if (typeof adminLogout === 'function') adminLogout();
     const userData = modalPendingSignupData || {
         name: 'Citizen User',
         phone: '9823012345',
         email: 'citizen@maharashtra.gov.in',
-        provider: 'phone-otp'
+        password: '',
+        provider: 'email'
     };
 
     if (!findUser(userData.email)) {
-        registerUser({ ...userData, password: '' });
+        registerUser({
+            name: userData.name,
+            email: userData.email,
+            phone: userData.phone,
+            password: userData.password,
+            role: 'Citizen Reporter',
+            registeredAt: new Date().toISOString(),
+            district: 'Maharashtra',
+            provider: 'email',
+            verified: true
+        });
     }
 
-    setCurrentUser({
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        provider: 'phone-otp',
-        verified: true
-    }, true);
+    // Redirect directly to login form — do NOT sign in directly
+    switchModalAuthTab('login');
+    const modalEmailInput = document.getElementById('modalLoginEmail');
+    if (modalEmailInput) {
+        modalEmailInput.value = userData.email;
+    }
+    const modalPwdInput = document.getElementById('modalLoginPassword');
+    if (modalPwdInput) {
+        modalPwdInput.value = '';
+        modalPwdInput.focus();
+    }
 
-    updateNavAuth();
-    closeAuthModal();
-    showAuthToast(`✅ Verified successfully! Welcome, ${userData.name}`);
+    showAuthToast(`Registration successful, ${userData.name}! Please login with your password.`);
+    modalPendingSignupData = null;
 }
 
 function resendModalOTP() {
@@ -1195,7 +1247,7 @@ function handleAdminPageLogin(e) {
         if (typeof showAdminDashboard === 'function') showAdminDashboard();
     } else {
         if (err) {
-            err.textContent = 'Invalid officer credentials. Use demo: admin / admin123';
+            err.textContent = 'Invalid officer credentials. Please enter valid admin username and password.';
             err.classList.add('show');
         }
     }
@@ -1217,7 +1269,7 @@ function handleModalAdminLogin(e) {
         if (typeof showAdminDashboard === 'function') showAdminDashboard();
     } else {
         if (err) {
-            err.textContent = 'Invalid officer credentials. Use demo: admin / admin123';
+            err.textContent = 'Invalid officer credentials. Please enter valid admin username and password.';
             err.style.display = 'block';
         }
     }

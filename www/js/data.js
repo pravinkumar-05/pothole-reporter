@@ -273,6 +273,25 @@ async function updateComplaintStatus(id, newStatus, note = '') {
     return { success: true, id, status: newStatus };
 }
 
+async function updateComplaintDetails(id, updates = {}) {
+    const localItems = getStoredLocalComplaints();
+    let target = localItems.find(c => c.id === id);
+    if (!target) {
+        const base = DEFAULT_COMPLAINTS.find(c => c.id === id);
+        if (base) {
+            target = JSON.parse(JSON.stringify(base));
+            localItems.unshift(target);
+        }
+    }
+    if (target) {
+        if (updates.description !== undefined) target.description = updates.description;
+        if (updates.severity !== undefined) target.severity = updates.severity;
+        target.updatedAt = new Date().toISOString();
+        localStorage.setItem(LOCAL_COMPLAINTS_KEY, JSON.stringify(localItems));
+    }
+    return { success: true, id };
+}
+
 // Stats are now computed on the backend
 async function getStats() {
     try {
