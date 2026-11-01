@@ -7,11 +7,11 @@
     <meta name="description"
         content="Report potholes and road damage in Maharashtra. Government of Maharashtra's citizen-driven road repair initiative under Smart India Hackathon.">
     <title>RoadGuard Maharashtra — Pothole & Road Damage Reporting System</title>
-    <link rel="stylesheet" href="css/style.css?v=3.5">
+    <link rel="stylesheet" href="css/style.css?v=3.6">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="js/icons.js?v=3.5"></script>
+    <script src="js/icons.js?v=3.6"></script>
     <link rel="icon" type="image/png" href="assets/logo.png">
     <script>
         (function () {
@@ -525,7 +525,7 @@
                         </div>
 
                         <!-- Login Form -->
-                        <form id="loginForm" class="auth-form">
+                        <form id="loginForm" class="auth-form" onsubmit="return handlePageLogin(event)">
                             <div class="form-group">
                                 <label data-i18n="lbl_email">Email Address</label>
                                 <input type="email" id="loginEmail" data-i18n-placeholder="ph_email" placeholder="your@email.com" required>
@@ -548,7 +548,7 @@
                         </form>
 
                         <!-- Signup Form -->
-                        <form id="signupForm" class="auth-form hidden">
+                        <form id="signupForm" class="auth-form hidden" onsubmit="return handlePageSignup(event)">
                             <div class="form-group">
                                 <label data-i18n="lbl_name">Full Name</label>
                                 <input type="text" id="signupName" data-i18n-placeholder="ph_name" placeholder="Enter your full name" required>
@@ -1653,14 +1653,14 @@
         </div>
     </footer>
 
-    <script src="js/icons.js?v=3.5"></script>
-    <script src="js/data.js?v=3.5"></script>
-    <script src="js/i18n.js?v=3.5"></script>
-    <script src="js/app.js?v=3.5"></script>
-    <script src="js/report.js?v=3.5"></script>
-    <script src="js/tracker.js?v=3.5"></script>
-    <script src="js/dashboard.js?v=3.5"></script>
-    <script src="js/auth.js?v=3.5"></script>
+    <script src="js/icons.js?v=3.6"></script>
+    <script src="js/data.js?v=3.6"></script>
+    <script src="js/i18n.js?v=3.6"></script>
+    <script src="js/app.js?v=3.6"></script>
+    <script src="js/report.js?v=3.6"></script>
+    <script src="js/tracker.js?v=3.6"></script>
+    <script src="js/dashboard.js?v=3.6"></script>
+    <script src="js/auth.js?v=3.6"></script>
 </body>
 
 </html>

@@ -31,7 +31,7 @@ if (dashLogoutBtn) {
         if (typeof resetAllLoginForms === 'function') resetAllLoginForms();
         if (typeof updateNavAuth === 'function') updateNavAuth();
         if (typeof showAuthToast === 'function') showAuthToast('Signed out from Admin Command Center');
-        if (typeof navigateTo === 'function') navigateTo('login');
+        if (typeof navigateTo === 'function') navigateTo('home');
         showCitizenDashboard();
     });
 }

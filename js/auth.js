@@ -218,10 +218,16 @@ function saveUsersDB(users) {
     localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
 }
 
-function findUser(email) {
-    if (!email) return null;
+function findUser(identifier) {
+    if (!identifier) return null;
+    const cleanId = identifier.trim().toLowerCase();
+    const phoneDigits = identifier.replace(/\D/g, '');
     const list = getUsersDB();
-    const u = list.find(user => user.email && user.email.toLowerCase() === email.toLowerCase().trim());
+    const u = list.find(user => {
+        const emailMatch = user.email && user.email.toLowerCase() === cleanId;
+        const phoneMatch = phoneDigits.length >= 10 && user.phone && user.phone.replace(/\D/g, '').includes(phoneDigits);
+        return emailMatch || phoneMatch;
+    });
     if (u && !u.password) {
         u.password = 'user123';
     }
@@ -408,7 +414,7 @@ if (userLogoutBtnEl) {
         if (typeof resetAllLoginForms === 'function') resetAllLoginForms();
         updateNavAuth();
         showAuthToast('Signed out successfully');
-        if (window.navigateTo) navigateTo('login');
+        if (window.navigateTo) navigateTo('home');
     });
 }
 
@@ -546,15 +552,15 @@ function showAuthError(elementId, message) {
 }
 
 // ---- Login Form Submit ----
-document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const remember = document.getElementById('rememberMe').checked;
+function handlePageLogin(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const email = document.getElementById('loginEmail')?.value.trim();
+    const password = document.getElementById('loginPassword')?.value;
+    const remember = document.getElementById('rememberMe')?.checked;
 
     if (!email || !password) {
         showAuthError('authError', 'Please fill in all fields.');
-        return;
+        return false;
     }
 
     // Check if credentials match PWD Admin
@@ -564,13 +570,13 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
         showAuthToast('PWD Administrator Authenticated. Loading GIS Command Center...');
         if (typeof navigateTo === 'function') navigateTo('dashboard');
         if (typeof showAdminDashboard === 'function') showAdminDashboard();
-        return;
+        return false;
     }
 
     const user = findUser(email);
     if (!user || (user.password && user.password !== password)) {
         showAuthError('authError', 'Invalid email or password. Try again.');
-        return;
+        return false;
     }
 
     if (typeof adminLogout === 'function') adminLogout();
@@ -582,7 +588,14 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     if (typeof requestUserLocationAndFocusMap === 'function') {
         setTimeout(() => requestUserLocationAndFocusMap(), 400);
     }
-});
+    return false;
+}
+window.handlePageLogin = handlePageLogin;
+
+const pageLoginFormEl = document.getElementById('loginForm');
+if (pageLoginFormEl) {
+    pageLoginFormEl.addEventListener('submit', handlePageLogin);
+}
 
 // ============================================================
 // OTP REGISTRATION FLOW
@@ -600,34 +613,34 @@ function maskPhone(phone) {
 }
 
 // ---- Signup Form Submit → Send OTP ----
-document.getElementById('signupForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const phone = document.getElementById('signupPhone').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirm = document.getElementById('signupConfirm').value;
+function handlePageSignup(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const name = document.getElementById('signupName')?.value.trim();
+    const email = document.getElementById('signupEmail')?.value.trim();
+    const phone = document.getElementById('signupPhone')?.value.trim();
+    const password = document.getElementById('signupPassword')?.value;
+    const confirm = document.getElementById('signupConfirm')?.value;
 
     // Validation
     if (!name || !email || !phone || !password || !confirm) {
         showAuthError('signupError', 'Please fill in all fields.');
-        return;
+        return false;
     }
     if (phone.length !== 10 || !/^\d+$/.test(phone)) {
         showAuthError('signupError', 'Please enter a valid 10-digit phone number.');
-        return;
+        return false;
     }
     if (password.length < 6) {
         showAuthError('signupError', 'Password must be at least 6 characters.');
-        return;
+        return false;
     }
     if (password !== confirm) {
         showAuthError('signupError', 'Passwords do not match.');
-        return;
+        return false;
     }
     if (findUser(email)) {
         showAuthError('signupError', 'An account with this email already exists.');
-        return;
+        return false;
     }
 
     // Store pending signup data
@@ -635,15 +648,26 @@ document.getElementById('signupForm').addEventListener('submit', (e) => {
 
     // Show loading on button
     const btn = document.getElementById('signupSubmitBtn');
-    btn.classList.add('loading');
-    btn.textContent = '';
+    if (btn) {
+        btn.classList.add('loading');
+        btn.textContent = '';
+    }
 
     setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.textContent = '📱 Send OTP';
+        if (btn) {
+            btn.classList.remove('loading');
+            btn.textContent = '📱 Send OTP';
+        }
         showOTPPanel(phone);
     }, 1000);
-});
+    return false;
+}
+window.handlePageSignup = handlePageSignup;
+
+const pageSignupFormEl = document.getElementById('signupForm');
+if (pageSignupFormEl) {
+    pageSignupFormEl.addEventListener('submit', handlePageSignup);
+}
 
 // ---- Show OTP Panel ----
 function showOTPPanel(phone) {
