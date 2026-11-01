@@ -20,12 +20,18 @@ function setCurrentUser(user, remember = false) {
     sessionStorage.setItem(USER_KEY, data);
     if (remember) localStorage.setItem(USER_KEY, data);
     updateNavAuth();
+    if (typeof requestUserLocationAndFocusMap === 'function') {
+        setTimeout(() => requestUserLocationAndFocusMap(), 350);
+    }
 }
 
 function clearCurrentUser() {
     sessionStorage.removeItem(USER_KEY);
     localStorage.removeItem(USER_KEY);
     updateNavAuth();
+    if (typeof resetMapToMaharashtraView === 'function') {
+        resetMapToMaharashtraView();
+    }
 }
 
 // ---- Local Users DB (demo) ----
@@ -1256,6 +1262,9 @@ function handleAdminPageLogin(e) {
     if (typeof adminLogin === 'function' && adminLogin(user, pass)) {
         clearCurrentUser();
         updateNavAuth();
+        if (typeof requestUserLocationAndFocusMap === 'function') {
+            setTimeout(() => requestUserLocationAndFocusMap(), 400);
+        }
         if (err) { err.textContent = ''; err.classList.remove('show'); }
         showAuthToast('PWD Administrator Authenticated. Loading GIS Command Center...');
         if (typeof navigateTo === 'function') navigateTo('dashboard');
@@ -1279,6 +1288,9 @@ function handleModalAdminLogin(e) {
         clearCurrentUser();
         updateNavAuth();
         closeAuthModal();
+        if (typeof requestUserLocationAndFocusMap === 'function') {
+            setTimeout(() => requestUserLocationAndFocusMap(), 400);
+        }
         showAuthToast('PWD Administrator Authenticated. Loading GIS Command Center...');
         if (typeof navigateTo === 'function') navigateTo('dashboard');
         if (typeof showAdminDashboard === 'function') showAdminDashboard();

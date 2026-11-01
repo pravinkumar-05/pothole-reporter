@@ -355,6 +355,124 @@ function requestUserLocationAndFocusMap(targetMap = null) {
     });
 }
 
+function isUserLoggedInSession() {
+    try {
+        const citizen = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        const admin = (typeof isAdminLoggedIn === 'function') ? isAdminLoggedIn() : (sessionStorage.getItem('mh_pothole_admin') === 'true');
+        return !!(citizen || admin);
+    } catch (e) {
+        return false;
+    }
+}
+
+// Work Progress Color Mapping: Red (Reported), Yellow (In Progress), Green (Completed)
+function getRoadWorkProgressColor(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'resolved' || s === 'completed' || s === 'fixed') {
+        return '#10B981'; // Green: Work Completed
+    }
+    if (s === 'in-progress' || s === 'under-review' || s === 'repair' || s === 'assigned') {
+        return '#EAB308'; // Yellow: Work in Progress
+    }
+    return '#EF4444'; // Red: Pothole Reported / Pending
+}
+
+function getRoadWorkProgressLabel(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'resolved' || s === 'completed' || s === 'fixed') {
+        return 'Work Completed';
+    }
+    if (s === 'in-progress' || s === 'under-review' || s === 'repair' || s === 'assigned') {
+        return 'Work in Progress';
+    }
+    return 'Pothole Reported';
+}
+
+function addWorkProgressLegend(map) {
+    if (!map || map._workProgressLegendAdded) return;
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function() {
+        const div = L.DomUtil.create('div', 'road-progress-legend');
+        div.innerHTML = `
+            <div style="font-weight:800;font-size:0.78rem;margin-bottom:6px;color:#0F172A;letter-spacing:0.2px;display:flex;align-items:center;gap:5px;">
+                <span>🛣️</span> <span>Road Work Progress</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;font-size:0.75rem;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#EF4444;border:2px solid #FFFFFF;box-shadow:0 0 3px rgba(0,0,0,0.35);"></span>
+                    <span style="color:#334155;"><b>Red:</b> Pothole Reported</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#EAB308;border:2px solid #FFFFFF;box-shadow:0 0 3px rgba(0,0,0,0.35);"></span>
+                    <span style="color:#334155;"><b>Yellow:</b> Work in Progress</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10B981;border:2px solid #FFFFFF;box-shadow:0 0 3px rgba(0,0,0,0.35);"></span>
+                    <span style="color:#334155;"><b>Green:</b> Work Completed</span>
+                </div>
+            </div>
+        `;
+        return div;
+    };
+    legend.addTo(map);
+    map._workProgressLegendAdded = true;
+}
+
+function addLocateMeControl(map) {
+    if (!map || map._locateControlAdded) return;
+    const LocateControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function() {
+            const container = L.DomUtil.create('div', 'leaflet-bar');
+            const btn = L.DomUtil.create('a', 'leaflet-control-locate', container);
+            btn.href = '#';
+            btn.title = 'Locate My Nearby Road';
+            btn.innerHTML = '📍';
+            btn.style.cssText = 'display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#ffffff;font-size:16px;text-decoration:none;cursor:pointer;';
+            L.DomEvent.disableClickPropagation(container);
+            btn.onclick = (e) => {
+                e.preventDefault();
+                requestUserLocationAndFocusMap(map);
+            };
+            return container;
+        }
+    });
+    map.addControl(new LocateControl());
+    map._locateControlAdded = true;
+}
+
+function resetMapToMaharashtraView() {
+    userLiveCoords = null;
+    try {
+        sessionStorage.removeItem('rg_live_lat');
+        sessionStorage.removeItem('rg_live_lng');
+        sessionStorage.removeItem('rg_live_acc');
+    } catch (e) {}
+
+    if (heroMap) {
+        if (heroMap._userLiveMarker) {
+            heroMap.removeLayer(heroMap._userLiveMarker);
+            heroMap._userLiveMarker = null;
+        }
+        if (heroMap._userLiveCircle) {
+            heroMap.removeLayer(heroMap._userLiveCircle);
+            heroMap._userLiveCircle = null;
+        }
+        heroMap.setView([19.5, 76.0], 6.7);
+    }
+    if (dashGisMap) {
+        if (dashGisMap._userLiveMarker) {
+            dashGisMap.removeLayer(dashGisMap._userLiveMarker);
+            dashGisMap._userLiveMarker = null;
+        }
+        if (dashGisMap._userLiveCircle) {
+            dashGisMap.removeLayer(dashGisMap._userLiveCircle);
+            dashGisMap._userLiveCircle = null;
+        }
+        dashGisMap.setView([19.5, 76.0], 6.7);
+    }
+}
+
 // ---- Hero Map (Maharashtra Road Network) ----
 async function initHeroMap() {
     const mapEl = document.getElementById('heroMap');
@@ -364,30 +482,36 @@ async function initHeroMap() {
         return;
     }
 
-    heroMap = L.map('heroMap', { zoomControl: false, attributionControl: false }).setView([19.5, 75.8], 6.6);
+    // Default: Show whole Maharashtra state map
+    heroMap = L.map('heroMap', { zoomControl: false, attributionControl: false }).setView([19.5, 76.0], 6.7);
     L.control.zoom({ position: 'topright' }).addTo(heroMap);
+    addLocateMeControl(heroMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(heroMap);
+    addWorkProgressLegend(heroMap);
 
-    // Clean map without artificial city nodes or links
-
-    // Add dynamically loaded complaints
+    // Plot road work progress dots (Red, Yellow, Green) on actual roads
     try {
         const complaints = await getComplaints();
         complaints.forEach(c => {
             if (c.location?.lat && c.location?.lng) {
-                const color = c.status === 'resolved' ? '#10B981' : (c.status === 'in-progress' ? '#F59E0B' : (c.status === 'under-review' ? '#3B82F6' : '#EF4444'));
+                const color = getRoadWorkProgressColor(c.status);
+                const statusLabel = getRoadWorkProgressLabel(c.status);
                 const locAddress = c.location.address || 'Maharashtra State Road';
-                // Reduced dot size as requested (radius: 4)
+                
                 const marker = L.circleMarker([c.location.lat, c.location.lng], {
-                    radius: 4,
+                    radius: 5,
                     fillColor: color,
                     color: '#FFFFFF',
-                    weight: 1.5,
+                    weight: 1.8,
                     fillOpacity: 0.95
                 }).addTo(heroMap);
 
-                // Display location whenever user moves cursor on the dot
-                marker.bindTooltip(`📍 ${locAddress}`, {
+                marker.bindTooltip(`
+                    <div style="font-family:Inter,sans-serif;font-size:0.8rem;line-height:1.4;">
+                        <strong>📍 ${locAddress}</strong><br>
+                        <span style="color:${color};font-weight:700;">● ${statusLabel}</span>
+                    </div>
+                `, {
                     permanent: false,
                     direction: 'top',
                     className: 'mh-complaint-tooltip',
@@ -396,19 +520,27 @@ async function initHeroMap() {
 
                 marker.on('mouseover', function() {
                     this.openTooltip();
-                    this.setStyle({ radius: 6.5, weight: 2.5, fillOpacity: 1 });
+                    this.setStyle({ radius: 7.5, weight: 2.5, fillOpacity: 1 });
                 });
-
                 marker.on('mouseout', function() {
                     this.closeTooltip();
-                    this.setStyle({ radius: 4, weight: 1.5, fillOpacity: 0.95 });
+                    this.setStyle({ radius: 5, weight: 1.8, fillOpacity: 0.95 });
                 });
 
                 marker.bindPopup(`
-                    <div style="font-family:Inter,sans-serif;min-width:180px;padding:4px;">
-                        <strong style="color:var(--text-primary);font-size:0.88rem;">${c.id}</strong><br>
-                        <span style="color:var(--text-muted);font-size:0.8rem;">📍 ${locAddress}</span><br>
-                        <span style="font-size:0.75rem;font-weight:700;color:${color};text-transform:uppercase;">${formatStatus(c.status)}</span>
+                    <div style="font-family:Inter,sans-serif;min-width:200px;padding:4px;color:#0F172A;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+                            <strong style="color:#2563EB;font-size:0.88rem;">${c.id}</strong>
+                            <span style="font-size:0.72rem;font-weight:700;color:${color};background:${color}18;padding:2px 8px;border-radius:12px;border:1px solid ${color}40;">
+                                ${statusLabel.toUpperCase()}
+                            </span>
+                        </div>
+                        <div style="font-size:0.82rem;font-weight:600;color:#1E293B;margin-bottom:4px;">📍 ${locAddress}</div>
+                        <div style="font-size:0.76rem;color:#64748B;margin-bottom:8px;line-height:1.35;">${c.statusNote || c.description || 'Road maintenance tracked on Maharashtra network.'}</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:6px;">
+                            <span style="font-size:0.72rem;color:#94A3B8;text-transform:uppercase;">${c.roadType || 'Highway'}</span>
+                            <button onclick="viewComplaint('${c.id}')" style="background:#2563EB;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.75rem;cursor:pointer;font-weight:700;">View Details</button>
+                        </div>
                     </div>
                 `);
             }
@@ -417,11 +549,15 @@ async function initHeroMap() {
         console.warn('Complaints load error:', err);
     }
 
-    // Auto-focus user location if coordinates available or prompt permission
-    if (userLiveCoords) {
-        showLocationOnMap(heroMap, userLiveCoords);
+    // Locate location ONLY whenever user is logged in; otherwise show whole Maharashtra map
+    if (isUserLoggedInSession()) {
+        if (userLiveCoords) {
+            showLocationOnMap(heroMap, userLiveCoords);
+        } else {
+            requestUserLocationAndFocusMap(heroMap);
+        }
     } else {
-        requestUserLocationAndFocusMap(heroMap);
+        heroMap.setView([19.5, 76.0], 6.7);
     }
 }
 
@@ -434,31 +570,36 @@ async function initDashboardGisMap() {
         return;
     }
 
-    dashGisMap = L.map('dashGisMap', { zoomControl: false, attributionControl: false }).setView([19.5, 75.8], 6.6);
+    dashGisMap = L.map('dashGisMap', { zoomControl: false, attributionControl: false }).setView([19.5, 76.0], 6.7);
     L.control.zoom({ position: 'topright' }).addTo(dashGisMap);
+    addLocateMeControl(dashGisMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(dashGisMap);
+    addWorkProgressLegend(dashGisMap);
 
-    // Clean map without artificial city nodes or links
-
-    // Plot real registered complaints on GIS map
+    // Plot real registered complaints on GIS map with work progress colors
     try {
         if (typeof getComplaints === 'function') {
             const complaints = await getComplaints();
             complaints.forEach(c => {
                 if (c.location && c.location.lat && c.location.lng) {
-                    const color = c.status === 'resolved' ? '#10B981' : (c.status === 'in-progress' ? '#F97316' : (c.status === 'under-review' ? '#3B82F6' : '#EF4444'));
+                    const color = getRoadWorkProgressColor(c.status);
+                    const statusLabel = getRoadWorkProgressLabel(c.status);
                     const locAddress = c.location.address || 'Maharashtra State Road';
-                    // Reduced dot size as requested (radius: 4.5)
+
                     const marker = L.circleMarker([c.location.lat, c.location.lng], {
-                        radius: 4.5,
+                        radius: 5,
                         fillColor: color,
                         color: '#FFFFFF',
-                        weight: 1.5,
+                        weight: 1.8,
                         fillOpacity: 0.95
                     }).addTo(dashGisMap);
 
-                    // Display location on mouseover
-                    marker.bindTooltip(`📍 ${locAddress}`, {
+                    marker.bindTooltip(`
+                        <div style="font-family:Inter,sans-serif;font-size:0.8rem;line-height:1.4;">
+                            <strong>📍 ${locAddress}</strong><br>
+                            <span style="color:${color};font-weight:700;">● ${statusLabel}</span>
+                        </div>
+                    `, {
                         permanent: false,
                         direction: 'top',
                         className: 'mh-complaint-tooltip',
@@ -467,19 +608,25 @@ async function initDashboardGisMap() {
 
                     marker.on('mouseover', function() {
                         this.openTooltip();
-                        this.setStyle({ radius: 7, weight: 2.5, fillOpacity: 1 });
+                        this.setStyle({ radius: 7.5, weight: 2.5, fillOpacity: 1 });
                     });
                     marker.on('mouseout', function() {
                         this.closeTooltip();
-                        this.setStyle({ radius: 4.5, weight: 1.5, fillOpacity: 0.95 });
+                        this.setStyle({ radius: 5, weight: 1.8, fillOpacity: 0.95 });
                     });
 
                     marker.bindPopup(`
-                        <div style="font-family:Inter,sans-serif;min-width:180px;color:#0B1B2B;padding:4px;">
-                            <div style="font-weight:800;font-size:0.9rem;margin-bottom:4px;">#${c.id}</div>
+                        <div style="font-family:Inter,sans-serif;min-width:200px;color:#0B1B2B;padding:4px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+                                <strong style="font-weight:800;font-size:0.9rem;">#${c.id}</strong>
+                                <span style="font-size:0.72rem;font-weight:700;color:${color};background:${color}18;padding:2px 8px;border-radius:12px;border:1px solid ${color}40;">
+                                    ${statusLabel.toUpperCase()}
+                                </span>
+                            </div>
                             <div style="font-size:0.8rem;color:#475569;margin-bottom:6px;">📍 ${locAddress}</div>
-                            <div style="display:flex;align-items:center;justify-content:space-between;">
-                                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:${color}">${c.status}</span>
+                            <div style="font-size:0.76rem;color:#64748B;margin-bottom:8px;line-height:1.35;">${c.statusNote || c.description || 'Road maintenance progress tracked on Maharashtra network.'}</div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:6px;">
+                                <span style="font-size:0.72rem;color:#94A3B8;text-transform:uppercase;">${c.roadType || 'Highway'}</span>
                                 <button onclick="viewComplaint('${c.id}')" style="background:#2563EB;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:0.75rem;cursor:pointer;font-weight:700;">Inspect</button>
                             </div>
                         </div>
@@ -489,11 +636,15 @@ async function initDashboardGisMap() {
         }
     } catch (e) {}
 
-    // Auto-focus user location on GIS map
-    if (userLiveCoords) {
-        showLocationOnMap(dashGisMap, userLiveCoords);
+    // Locate location ONLY whenever user is logged in; otherwise show whole Maharashtra map
+    if (isUserLoggedInSession()) {
+        if (userLiveCoords) {
+            showLocationOnMap(dashGisMap, userLiveCoords);
+        } else {
+            requestUserLocationAndFocusMap(dashGisMap);
+        }
     } else {
-        requestUserLocationAndFocusMap(dashGisMap);
+        dashGisMap.setView([19.5, 76.0], 6.7);
     }
 }
 
@@ -636,8 +787,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(initHeroMap, 300);
     }
 
-    // Auto-detect location if user is already logged in
-    if (typeof getCurrentUser === 'function' && getCurrentUser()) {
+    // Auto-detect location ONLY if user is already logged in
+    if (typeof isUserLoggedInSession === 'function' && isUserLoggedInSession()) {
         setTimeout(() => requestUserLocationAndFocusMap(), 400);
     }
 });
