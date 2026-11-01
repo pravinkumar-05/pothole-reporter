@@ -227,17 +227,8 @@ async function showComplaintDetail(id) {
     }
 }
 
-// Maharashtra Cities & Highway Network (matches Design 1 & 2)
-const MH_CITIES = [
-    { name: 'Mumbai', lat: 19.0760, lng: 72.8777, status: 'pothole', count: 184 },
-    { name: 'Pune', lat: 18.5204, lng: 73.8567, status: 'resolved', count: 420 },
-    { name: 'Nashik', lat: 19.9975, lng: 73.7898, status: 'pothole', count: 96 },
-    { name: 'Aurangabad', lat: 19.8762, lng: 75.3433, status: 'repair', count: 112 },
-    { name: 'Kolhapur', lat: 16.7050, lng: 74.2433, status: 'resolved', count: 215 },
-    { name: 'Nagpur', lat: 21.1458, lng: 79.0882, status: 'repair', count: 153 },
-    { name: 'Solapur', lat: 17.6599, lng: 75.9064, status: 'pothole', count: 88 },
-    { name: 'Amravati', lat: 20.9374, lng: 77.7796, status: 'resolved', count: 140 }
-];
+// Clean base map with live user location & citizen complaints only
+const MH_CITIES = [];
 
 let dashGisMap = null;
 let userLiveCoords = null;
@@ -377,41 +368,7 @@ async function initHeroMap() {
     L.control.zoom({ position: 'topright' }).addTo(heroMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(heroMap);
 
-    // Key City Nodes
-    MH_CITIES.forEach(city => {
-        const color = city.status === 'resolved' ? '#10B981' : (city.status === 'repair' ? '#F59E0B' : '#EF4444');
-        const marker = L.circleMarker([city.lat, city.lng], {
-            radius: 5.5,
-            fillColor: color,
-            color: '#FFFFFF',
-            weight: 1.5,
-            fillOpacity: 0.95
-        }).addTo(heroMap);
-
-        marker.bindTooltip(`📍 ${city.name}, Maharashtra`, {
-            permanent: false,
-            direction: 'top',
-            className: 'mh-complaint-tooltip',
-            offset: [0, -6]
-        });
-
-        marker.on('mouseover', function() {
-            this.openTooltip();
-            this.setStyle({ radius: 7.5, weight: 2.5, fillOpacity: 1 });
-        });
-        marker.on('mouseout', function() {
-            this.closeTooltip();
-            this.setStyle({ radius: 5.5, weight: 1.5, fillOpacity: 0.95 });
-        });
-
-        marker.bindPopup(`
-            <div style="font-size:0.85rem;padding:4px;">
-                <strong style="color:${color};font-size:0.95rem;">📍 ${city.name}</strong><br>
-                <span>Status: <b>${city.status === 'resolved' ? 'Resolved' : (city.status === 'repair' ? 'Under Repair' : 'Pothole Reported')}</b></span><br>
-                <span style="color:#64748B;">Active Reports: ${city.count}</span>
-            </div>
-        `);
-    });
+    // Clean map without artificial city nodes or links
 
     // Add dynamically loaded complaints
     try {
@@ -460,11 +417,10 @@ async function initHeroMap() {
         console.warn('Complaints load error:', err);
     }
 
-    // Auto-focus user location if user is logged in or coordinates available
-    const currentUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+    // Auto-focus user location if coordinates available or prompt permission
     if (userLiveCoords) {
         showLocationOnMap(heroMap, userLiveCoords);
-    } else if (currentUser) {
+    } else {
         requestUserLocationAndFocusMap(heroMap);
     }
 }
@@ -482,32 +438,7 @@ async function initDashboardGisMap() {
     L.control.zoom({ position: 'topright' }).addTo(dashGisMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(dashGisMap);
 
-    MH_CITIES.forEach(city => {
-        const color = city.status === 'resolved' ? '#10B981' : (city.status === 'repair' ? '#F59E0B' : '#EF4444');
-        const marker = L.circleMarker([city.lat, city.lng], {
-            radius: 5.5,
-            fillColor: color,
-            color: '#FFFFFF',
-            weight: 1.5,
-            fillOpacity: 0.95
-        }).addTo(dashGisMap);
-
-        marker.bindTooltip(`📍 ${city.name}, Maharashtra`, {
-            permanent: false,
-            direction: 'top',
-            className: 'mh-complaint-tooltip',
-            offset: [0, -6]
-        });
-
-        marker.on('mouseover', function() {
-            this.openTooltip();
-            this.setStyle({ radius: 7.5, weight: 2.5, fillOpacity: 1 });
-        });
-        marker.on('mouseout', function() {
-            this.closeTooltip();
-            this.setStyle({ radius: 5.5, weight: 1.5, fillOpacity: 0.95 });
-        });
-    });
+    // Clean map without artificial city nodes or links
 
     // Plot real registered complaints on GIS map
     try {
@@ -558,11 +489,10 @@ async function initDashboardGisMap() {
         }
     } catch (e) {}
 
-    // Auto-focus user location on GIS map if logged in
-    const currentUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+    // Auto-focus user location on GIS map
     if (userLiveCoords) {
         showLocationOnMap(dashGisMap, userLiveCoords);
-    } else if (currentUser) {
+    } else {
         requestUserLocationAndFocusMap(dashGisMap);
     }
 }
