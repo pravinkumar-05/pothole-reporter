@@ -40,6 +40,9 @@ function navigateTo(pageName) {
         setTimeout(initDashboardGisMap, 200);
     }
     if (pageName === 'login') {
+        if (typeof resetAllLoginForms === 'function') {
+            resetAllLoginForms();
+        }
         if (window.location.hash.toLowerCase().includes('admin') && typeof switchAuthTab === 'function') {
             setTimeout(() => switchAuthTab('admin'), 60);
         }

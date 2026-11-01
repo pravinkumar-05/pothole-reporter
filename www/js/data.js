@@ -735,6 +735,9 @@ function adminLogout() {
     if (typeof resetMapToMaharashtraView === 'function') {
         resetMapToMaharashtraView();
     }
+    if (typeof resetAllLoginForms === 'function') {
+        resetAllLoginForms();
+    }
 }
 
 // seedDemoData logic removed since backend handles db seeding via schema.sql

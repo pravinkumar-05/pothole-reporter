@@ -32,7 +32,102 @@ function clearCurrentUser() {
     if (typeof resetMapToMaharashtraView === 'function') {
         resetMapToMaharashtraView();
     }
+    if (typeof resetAllLoginForms === 'function') {
+        resetAllLoginForms();
+    }
 }
+
+// ---- Reset All Login & Auth Forms on Logout ----
+function resetAllLoginForms() {
+    // 1. Reset all form elements
+    const formIds = [
+        'loginForm',
+        'signupForm',
+        'adminPageLoginForm',
+        'adminModalLoginForm',
+        'modalLoginForm',
+        'modalSignupForm',
+        'modalAdminForm'
+    ];
+    formIds.forEach(id => {
+        const form = document.getElementById(id);
+        if (form && typeof form.reset === 'function') {
+            try { form.reset(); } catch (e) {}
+        }
+    });
+
+    // 2. Explicitly blank out all input fields
+    const inputIds = [
+        'loginEmail', 'loginPassword', 'rememberMe',
+        'signupName', 'signupEmail', 'signupPhone', 'signupPassword', 'signupConfirm',
+        'adminPageUser', 'adminPagePassword',
+        'modalLoginEmail', 'modalLoginPassword', 'modalRememberMe',
+        'modalSignupName', 'modalSignupEmail', 'modalSignupPhone', 'modalSignupPassword', 'modalSignupConfirm',
+        'modalAdminUser', 'modalAdminPass'
+    ];
+    inputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.type === 'checkbox') {
+                el.checked = false;
+            } else {
+                el.value = '';
+            }
+            el.classList.remove('is-invalid', 'error');
+        }
+    });
+
+    // 3. Clear all OTP digits
+    document.querySelectorAll('.otp-digit').forEach(el => {
+        el.value = '';
+    });
+
+    // 4. Clear all error feedback messages
+    const errorIds = [
+        'authError', 'signupError', 'otpError', 'adminPageError',
+        'modalAuthError', 'modalSignupError', 'modalOtpError', 'modalAdminError'
+    ];
+    errorIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = '';
+            el.classList.remove('show');
+            el.style.display = 'none';
+        }
+    });
+
+    // 5. Hide OTP verification panels
+    const otpPanel = document.getElementById('otpPanel');
+    if (otpPanel) otpPanel.classList.add('hidden');
+    const modalOtpPanel = document.getElementById('modalOtpPanel');
+    if (modalOtpPanel) modalOtpPanel.classList.add('hidden');
+
+    // 6. Reset password strength meter
+    const strengthMeter = document.getElementById('passwordStrength');
+    if (strengthMeter) strengthMeter.innerHTML = '';
+
+    // 7. Reset password visibility toggles back to masked (type="password")
+    const passInputIds = [
+        'loginPassword', 'signupPassword', 'signupConfirm', 'adminPagePassword',
+        'modalLoginPassword', 'modalSignupPassword', 'modalSignupConfirm', 'modalAdminPass'
+    ];
+    passInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.type = 'password';
+    });
+
+    // 8. Clear any in-memory OTP signup state
+    pendingSignupData = null;
+
+    // 9. Reset auth tab back to default 'login' tab for both page and modal
+    if (typeof switchAuthTab === 'function') {
+        switchAuthTab('login');
+    }
+    if (typeof switchModalAuthTab === 'function') {
+        switchModalAuthTab('login');
+    }
+}
+window.resetAllLoginForms = resetAllLoginForms;
 
 // ---- Local Users DB (demo) ----
 const DEFAULT_REGISTERED_USERS = [
@@ -300,9 +395,10 @@ if (userLogoutBtnEl) {
         e.preventDefault();
         if (typeof adminLogout === 'function') adminLogout();
         clearCurrentUser();
+        resetAllLoginForms();
         updateNavAuth();
         showAuthToast('Signed out successfully');
-        if (window.navigateTo) navigateTo('home');
+        if (window.navigateTo) navigateTo('login');
     });
 }
 
