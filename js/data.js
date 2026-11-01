@@ -732,12 +732,6 @@ function adminLogin(u, p) {
 }
 function adminLogout() {
     sessionStorage.removeItem(ADMIN_KEY);
-    if (typeof resetMapToMaharashtraView === 'function') {
-        resetMapToMaharashtraView();
-    }
-    if (typeof resetAllLoginForms === 'function') {
-        resetAllLoginForms();
-    }
 }
 
 // seedDemoData logic removed since backend handles db seeding via schema.sql

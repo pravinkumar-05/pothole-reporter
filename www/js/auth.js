@@ -29,12 +29,6 @@ function clearCurrentUser() {
     sessionStorage.removeItem(USER_KEY);
     localStorage.removeItem(USER_KEY);
     updateNavAuth();
-    if (typeof resetMapToMaharashtraView === 'function') {
-        resetMapToMaharashtraView();
-    }
-    if (typeof resetAllLoginForms === 'function') {
-        resetAllLoginForms();
-    }
 }
 
 // ---- Reset All Login & Auth Forms on Logout ----
@@ -92,7 +86,7 @@ function resetAllLoginForms() {
         if (el) {
             el.textContent = '';
             el.classList.remove('show');
-            el.style.display = 'none';
+            el.style.display = '';
         }
     });
 
@@ -115,6 +109,9 @@ function resetAllLoginForms() {
         const el = document.getElementById(id);
         if (el) el.type = 'password';
     });
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.textContent = '👁️';
+    });
 
     // 8. Clear any in-memory OTP signup state
     pendingSignupData = null;
@@ -135,6 +132,7 @@ const DEFAULT_REGISTERED_USERS = [
         name: 'Pravin Kumar',
         email: 'pravin.pwd@gmail.com',
         phone: '9820011223',
+        password: 'user123',
         role: 'Citizen Reporter',
         registeredAt: '2026-02-14T10:30:00Z',
         provider: 'google',
@@ -145,6 +143,7 @@ const DEFAULT_REGISTERED_USERS = [
         name: 'Maharashtra Citizen',
         email: 'citizen.mh@gmail.com',
         phone: '9876543210',
+        password: 'user123',
         role: 'Verified Citizen',
         registeredAt: '2026-02-28T09:15:00Z',
         provider: 'email',
@@ -155,6 +154,7 @@ const DEFAULT_REGISTERED_USERS = [
         name: 'Rajesh Patil',
         email: 'rajesh.patil@yahoo.com',
         phone: '9822014455',
+        password: 'user123',
         role: 'Citizen User',
         registeredAt: '2026-03-05T14:20:00Z',
         provider: 'phone-otp',
@@ -165,6 +165,7 @@ const DEFAULT_REGISTERED_USERS = [
         name: 'Priya Deshmukh',
         email: 'priya.deshmukh@gmail.com',
         phone: '9890123456',
+        password: 'user123',
         role: 'Citizen User',
         registeredAt: '2026-03-18T11:45:00Z',
         provider: 'google',
@@ -175,6 +176,7 @@ const DEFAULT_REGISTERED_USERS = [
         name: 'Amit Shinde',
         email: 'amit.shinde@rediffmail.com',
         phone: '9823456789',
+        password: 'user123',
         role: 'Citizen Reporter',
         registeredAt: '2026-03-27T16:10:00Z',
         provider: 'email',
@@ -185,6 +187,7 @@ const DEFAULT_REGISTERED_USERS = [
         name: 'Sunita Joshi',
         email: 'sunita.joshi@gmail.com',
         phone: '9822987654',
+        password: 'user123',
         role: 'PWD Ward Volunteer',
         registeredAt: '2026-04-08T08:30:00Z',
         provider: 'phone-otp',
@@ -216,7 +219,13 @@ function saveUsersDB(users) {
 }
 
 function findUser(email) {
-    return getUsersDB().find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!email) return null;
+    const list = getUsersDB();
+    const u = list.find(user => user.email && user.email.toLowerCase() === email.toLowerCase().trim());
+    if (u && !u.password) {
+        u.password = 'user123';
+    }
+    return u || null;
 }
 
 function registerUser(user) {
@@ -395,7 +404,8 @@ if (userLogoutBtnEl) {
         e.preventDefault();
         if (typeof adminLogout === 'function') adminLogout();
         clearCurrentUser();
-        resetAllLoginForms();
+        if (typeof resetMapToMaharashtraView === 'function') resetMapToMaharashtraView();
+        if (typeof resetAllLoginForms === 'function') resetAllLoginForms();
         updateNavAuth();
         showAuthToast('Signed out successfully');
         if (window.navigateTo) navigateTo('login');
@@ -558,7 +568,7 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     }
 
     const user = findUser(email);
-    if (!user || user.password !== password) {
+    if (!user || (user.password && user.password !== password)) {
         showAuthError('authError', 'Invalid email or password. Try again.');
         return;
     }
@@ -1453,20 +1463,12 @@ if (googleSignInBtnEl) {
     });
 }
 
-// ---- Login Success Animation ----
+// ---- Login Success Notification & Redirect ----
 function showLoginSuccess(name) {
-    const card = document.querySelector('.auth-card');
-    if (!card) return;
-    card.innerHTML = `
-        <div style="text-align:center;padding:40px 0;animation:fadeInUp 0.5s ease;">
-            <div style="font-size:4rem;margin-bottom:16px;">✅</div>
-            <h2 style="color:var(--green);font-size:1.6rem;margin-bottom:8px;">Welcome, ${name}!</h2>
-            <p style="color:var(--gray-400);margin-bottom:32px;">Your account has been verified and signed in successfully.</p>
-            <button class="btn-primary" data-page="home" style="margin:0 auto;" onclick="navigateTo('home')">🏠 Go to Home</button>
-            <br><br>
-            <button class="btn-secondary" data-page="report" onclick="navigateTo('report')">📸 Report a Pothole</button>
-        </div>
-    `;
+    showAuthToast(`Welcome, ${name}! Signed in successfully.`);
+    if (typeof navigateTo === 'function') {
+        navigateTo('home');
+    }
 }
 
 // ---- Init Auth State on Page Load ----

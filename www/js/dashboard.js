@@ -27,6 +27,7 @@ if (dashLogoutBtn) {
         e.preventDefault();
         if (typeof adminLogout === 'function') adminLogout();
         if (typeof clearCurrentUser === 'function') clearCurrentUser();
+        if (typeof resetMapToMaharashtraView === 'function') resetMapToMaharashtraView();
         if (typeof resetAllLoginForms === 'function') resetAllLoginForms();
         if (typeof updateNavAuth === 'function') updateNavAuth();
         if (typeof showAuthToast === 'function') showAuthToast('Signed out from Admin Command Center');
