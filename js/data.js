@@ -99,45 +99,58 @@ const DEFAULT_COMPLAINTS = [
     }
 ];
 
-// Optionally enhance with live GPS location if permitted by browser
-if (typeof navigator !== 'undefined' && navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            try {
-                const userLat = parseFloat(pos.coords.latitude.toFixed(5));
-                const userLng = parseFloat(pos.coords.longitude.toFixed(5));
-                const local = getStoredLocalComplaints();
-                const existing = local.find(c => c.id === 'MH-2026-NEARBY-GPS');
-                if (!existing) {
-                    const nearbyGpsComplaint = {
-                        id: 'MH-2026-NEARBY-GPS',
-                        name: 'Pravin Kumar',
-                        phone: '9820011223',
-                        email: 'pravin.pwd@gmail.com',
-                        description: 'Surface depression and road erosion detected near your current live location.',
-                        severity: 'high',
-                        roadType: 'municipal-road',
-                        location: {
-                            lat: parseFloat((userLat + 0.0018).toFixed(5)),
-                            lng: parseFloat((userLng + 0.0015).toFixed(5)),
-                            address: 'Nearby Road (within 200m of your GPS location)'
-                        },
-                        status: 'in-progress',
-                        statusNote: 'PWD field unit notified for urgent asphalt patching.',
-                        submittedAt: new Date(Date.now() - 3600 * 1000).toISOString(),
-                        updatedAt: new Date(Date.now() - 1800 * 1000).toISOString()
-                    };
-                    saveLocalComplaintItem(nearbyGpsComplaint);
-                    if (typeof updateStats === 'function') updateStats();
-                    if (typeof renderRecentComplaints === 'function') renderRecentComplaints();
+function updateNearbyLocationComplaint(userLat, userLng) {
+    if (!userLat || !userLng) return;
+    try {
+        const local = getStoredLocalComplaints();
+        let existing = local.find(c => c.id === 'MH-2026-NEARBY-GPS');
+        const nearbyCoords = {
+            lat: parseFloat((userLat + 0.0016).toFixed(5)),
+            lng: parseFloat((userLng + 0.0014).toFixed(5)),
+            address: `Nearby Road (within 200m of your GPS location)`
+        };
+        if (!existing) {
+            existing = {
+                id: 'MH-2026-NEARBY-GPS',
+                name: 'Live Citizen Reporter',
+                phone: '9820011223',
+                email: 'citizen.mh@gmail.com',
+                description: 'Surface depression and road erosion detected near your current live location.',
+                severity: 'high',
+                roadType: 'municipal-road',
+                location: nearbyCoords,
+                status: 'in-progress',
+                statusNote: 'PWD emergency repair squad notified for rapid patching.',
+                submittedAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+                updatedAt: new Date().toISOString(),
+                statusHistory: [
+                    { status: 'pending', date: new Date(Date.now() - 3600 * 1000).toISOString(), note: 'Live location verified by citizen GPS.' },
+                    { status: 'in-progress', date: new Date().toISOString(), note: 'Dispatched to local ward repair unit.' }
+                ]
+            };
+            local.unshift(existing);
+        } else {
+            existing.location = nearbyCoords;
+            existing.updatedAt = new Date().toISOString();
+        }
+        localStorage.setItem(LOCAL_COMPLAINTS_KEY, JSON.stringify(local));
+
+        // Attempt reverse geocoding to give a real street address
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${nearbyCoords.lat}&lon=${nearbyCoords.lng}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    existing.location.address = data.display_name.split(',').slice(0, 3).join(', ');
+                    localStorage.setItem(LOCAL_COMPLAINTS_KEY, JSON.stringify(local));
                 }
-            } catch (e) {
-                // Ignore silent background GPS enhancement errors
-            }
-        },
-        () => {},
-        { timeout: 3500, maximumAge: 300000 }
-    );
+            })
+            .catch(() => {});
+
+        if (typeof updateStats === 'function') updateStats();
+        if (typeof renderRecentComplaints === 'function') renderRecentComplaints();
+    } catch (e) {
+        console.warn('Could not update nearby GPS complaint:', e);
+    }
 }
 
 function getStoredLocalComplaints() {

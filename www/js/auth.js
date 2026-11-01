@@ -465,6 +465,11 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     setCurrentUser({ name: user.name, email: user.email, phone: user.phone, provider: 'email' }, remember);
     updateNavAuth();
     showLoginSuccess(user.name);
+
+    // Request accurate location and center map
+    if (typeof requestUserLocationAndFocusMap === 'function') {
+        setTimeout(() => requestUserLocationAndFocusMap(), 400);
+    }
 });
 
 // ============================================================
@@ -958,6 +963,11 @@ function selectGoogleAccount(accountKey) {
 
     showAuthToast(`Signed in with Google as ${googleUser.name}`);
 
+    // Request accurate location and center map
+    if (typeof requestUserLocationAndFocusMap === 'function') {
+        setTimeout(() => requestUserLocationAndFocusMap(), 400);
+    }
+
     // If on #page-login, also show success screen
     const pageLogin = document.getElementById('page-login');
     if (pageLogin && !pageLogin.classList.contains('hidden')) {
@@ -1040,6 +1050,11 @@ function handleModalEmailLogin(e) {
     updateNavAuth();
     closeAuthModal();
     showAuthToast(`Welcome back, ${user.name}!`);
+
+    // Request accurate location and center map
+    if (typeof requestUserLocationAndFocusMap === 'function') {
+        setTimeout(() => requestUserLocationAndFocusMap(), 400);
+    }
 }
 
 let modalCurrentOTP = null;

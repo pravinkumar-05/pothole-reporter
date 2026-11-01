@@ -219,11 +219,16 @@
                             <span data-i18n="mh_road_net_sub">Road Network</span>
                         </div>
                     </div>
+                    <button type="button" class="btn-map-locate-me" id="btnHeroLocateMe" onclick="requestUserLocationAndFocusMap(heroMap)" title="Detect & Focus My Accurate GPS Location">
+                        <i data-lucide="crosshair"></i>
+                        <span>My Location</span>
+                    </button>
                     <div id="heroMap" class="hero-map-canvas"></div>
                     <div class="map-legend-card">
                         <div class="legend-row"><span class="legend-dot dot-pothole"></span> <span data-i18n="legend_pothole">Pothole</span></div>
                         <div class="legend-row"><span class="legend-dot dot-repair"></span> <span data-i18n="legend_repair">Under Repair</span></div>
                         <div class="legend-row"><span class="legend-dot dot-resolved"></span> <span data-i18n="legend_resolved">Resolved</span></div>
+                        <div class="legend-row"><span class="user-gps-legend-dot"></span> <span>You Are Here</span></div>
                     </div>
                 </div>
             </div>

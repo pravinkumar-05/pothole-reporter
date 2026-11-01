@@ -239,20 +239,130 @@ const MH_CITIES = [
     { name: 'Amravati', lat: 20.9374, lng: 77.7796, status: 'resolved', count: 140 }
 ];
 
-const MH_HIGHWAYS = [
-    // Mumbai - Pune - Kolhapur
-    [[19.0760, 72.8777], [18.5204, 73.8567], [16.7050, 74.2433]],
-    // Mumbai - Nashik - Aurangabad - Amravati - Nagpur
-    [[19.0760, 72.8777], [19.9975, 73.7898], [19.8762, 75.3433], [20.9374, 77.7796], [21.1458, 79.0882]],
-    // Pune - Solapur
-    [[18.5204, 73.8567], [17.6599, 75.9064]],
-    // Aurangabad - Solapur
-    [[19.8762, 75.3433], [17.6599, 75.9064]],
-    // Nashik - Pune
-    [[19.9975, 73.7898], [18.5204, 73.8567]]
-];
-
 let dashGisMap = null;
+let userLiveCoords = null;
+
+// ---- User Geolocation & Live Map Tracking ----
+function getUserLiveLocation(callback) {
+    if (!navigator.geolocation) {
+        if (callback) callback(null);
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = parseFloat(pos.coords.latitude.toFixed(6));
+            const lng = parseFloat(pos.coords.longitude.toFixed(6));
+            const accuracy = Math.round(pos.coords.accuracy || 30);
+            userLiveCoords = { lat, lng, accuracy };
+
+            try {
+                sessionStorage.setItem('rg_live_lat', lat);
+                sessionStorage.setItem('rg_live_lng', lng);
+                sessionStorage.setItem('rg_live_acc', accuracy);
+            } catch (e) {}
+
+            // Update nearby complaint in data.js to be in this user's immediate vicinity
+            if (typeof updateNearbyLocationComplaint === 'function') {
+                updateNearbyLocationComplaint(lat, lng);
+            }
+
+            if (callback) callback(userLiveCoords);
+        },
+        (err) => {
+            console.warn('Geolocation permission not granted or error:', err.message);
+            if (callback) callback(null);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+function showLocationOnMap(map, coords, popupMessage = null) {
+    if (!map || !coords) return;
+    const { lat, lng, accuracy } = coords;
+
+    // Remove existing user layers on this map instance
+    if (map._userLiveMarker) {
+        map.removeLayer(map._userLiveMarker);
+    }
+    if (map._userLiveCircle) {
+        map.removeLayer(map._userLiveCircle);
+    }
+
+    // 1. Accuracy radius circle
+    map._userLiveCircle = L.circle([lat, lng], {
+        radius: Math.max(accuracy, 50),
+        color: '#2563EB',
+        fillColor: '#3B82F6',
+        fillOpacity: 0.12,
+        weight: 1.5,
+        dashArray: '3, 4'
+    }).addTo(map);
+
+    // 2. Custom pulsing live GPS pin
+    const pulseIcon = L.divIcon({
+        className: 'user-live-location-pin',
+        html: `
+            <div class="user-gps-pulse-ring"></div>
+            <div class="user-gps-center-dot"></div>
+        `,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+    });
+
+    map._userLiveMarker = L.marker([lat, lng], {
+        icon: pulseIcon,
+        zIndexOffset: 1200
+    }).addTo(map);
+
+    const defaultMsg = `
+        <div style="font-family:Inter,sans-serif;min-width:180px;padding:4px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                <span style="font-size:1rem;">📍</span>
+                <strong style="color:#2563EB;font-size:0.9rem;">Your Live Location</strong>
+            </div>
+            <span id="userLiveAddrPopup" style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">
+                GPS: ${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E
+            </span>
+            <span style="font-size:0.72rem;font-weight:700;color:#16A34A;background:rgba(22,163,74,0.1);padding:2px 8px;border-radius:12px;">
+                🎯 Accurate within ±${accuracy}m
+            </span>
+        </div>
+    `;
+
+    map._userLiveMarker.bindPopup(popupMessage || defaultMsg);
+
+    // Reverse geocode address to populate human-readable name in popup
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(r => r.json())
+        .then(data => {
+            const addr = data.display_name ? data.display_name.split(',').slice(0, 3).join(', ') : '';
+            if (addr) {
+                const el = document.getElementById('userLiveAddrPopup');
+                if (el) el.innerHTML = `<strong>${addr}</strong><br><small style="color:#64748B;">GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}</small>`;
+            }
+        })
+        .catch(() => {});
+
+    // Fly smoothly to user location with high zoom
+    map.flyTo([lat, lng], 14, { animate: true, duration: 1.5 });
+}
+
+function requestUserLocationAndFocusMap(targetMap = null) {
+    getUserLiveLocation((coords) => {
+        if (!coords) return;
+        if (targetMap) {
+            showLocationOnMap(targetMap, coords);
+        } else {
+            if (heroMap) showLocationOnMap(heroMap, coords);
+            if (dashGisMap) showLocationOnMap(dashGisMap, coords);
+        }
+    });
+}
 
 // ---- Hero Map (Maharashtra Road Network) ----
 async function initHeroMap() {
@@ -266,16 +376,6 @@ async function initHeroMap() {
     heroMap = L.map('heroMap', { zoomControl: false, attributionControl: false }).setView([19.5, 75.8], 6.6);
     L.control.zoom({ position: 'topright' }).addTo(heroMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(heroMap);
-
-    // Arterial Highway Corridors
-    MH_HIGHWAYS.forEach(coords => {
-        L.polyline(coords, {
-            color: '#3B82F6',
-            weight: 2.5,
-            opacity: 0.6,
-            dashArray: '5, 6'
-        }).addTo(heroMap);
-    });
 
     // Key City Nodes
     MH_CITIES.forEach(city => {
@@ -356,8 +456,16 @@ async function initHeroMap() {
                 `);
             }
         });
-    } catch(err) {
+    } catch (err) {
         console.warn('Complaints load error:', err);
+    }
+
+    // Auto-focus user location if user is logged in or coordinates available
+    const currentUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+    if (userLiveCoords) {
+        showLocationOnMap(heroMap, userLiveCoords);
+    } else if (currentUser) {
+        requestUserLocationAndFocusMap(heroMap);
     }
 }
 
@@ -373,15 +481,6 @@ async function initDashboardGisMap() {
     dashGisMap = L.map('dashGisMap', { zoomControl: false, attributionControl: false }).setView([19.5, 75.8], 6.6);
     L.control.zoom({ position: 'topright' }).addTo(dashGisMap);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(dashGisMap);
-
-    MH_HIGHWAYS.forEach(coords => {
-        L.polyline(coords, {
-            color: '#06B6D4',
-            weight: 2.5,
-            opacity: 0.7,
-            dashArray: '4, 6'
-        }).addTo(dashGisMap);
-    });
 
     MH_CITIES.forEach(city => {
         const color = city.status === 'resolved' ? '#10B981' : (city.status === 'repair' ? '#F59E0B' : '#EF4444');
@@ -457,7 +556,15 @@ async function initDashboardGisMap() {
                 }
             });
         }
-    } catch(e) {}
+    } catch (e) {}
+
+    // Auto-focus user location on GIS map if logged in
+    const currentUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+    if (userLiveCoords) {
+        showLocationOnMap(dashGisMap, userLiveCoords);
+    } else if (currentUser) {
+        requestUserLocationAndFocusMap(dashGisMap);
+    }
 }
 
 // ---- Trend Range Switcher ----
@@ -597,6 +704,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStats();
         renderRecentComplaints();
         setTimeout(initHeroMap, 300);
+    }
+
+    // Auto-detect location if user is already logged in
+    if (typeof getCurrentUser === 'function' && getCurrentUser()) {
+        setTimeout(() => requestUserLocationAndFocusMap(), 400);
     }
 });
 
